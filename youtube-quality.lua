@@ -17,11 +17,11 @@ local opts = {
     menu_timeout = 10,
     quality_strings=[[
     [
-    "bestvideo[height<=?1080]+bestaudio/best",
-    "bestvideo[height<=?720]+bestaudio/best",
-    "bestvideo[height<=?360]+bestaudio/best",
-    "bestvideo[height<=?240]+bestaudio/best",
-    "bestvideo[height<=?144]+bestaudio/best"
+    {"1080p" : "bestvideo[height<=?1080]+bestaudio/best"},
+    {"720p" : "bestvideo[height<=?720]+bestaudio/best"},
+    {"360p" : "bestvideo[height<=?360]+bestaudio/best"},
+    {"240p" : "bestvideo[height<=?240]+bestaudio/best"},
+    {"144p" : "bestvideo[height<=?144]+bestaudio/best"}
     ]
     ]],
 }
@@ -31,9 +31,13 @@ opts.quality_strings = utils.parse_json(opts.quality_strings)
 function show_menu()
     local selected = 1
     local num_options = 0
+    local options = {}
 
     for i,v in ipairs(opts.quality_strings) do
         num_options = num_options + 1
+        for k,v2 in pairs(v) do
+            options[i] = {label = k, format=v2}
+        end
     end
 
     function selected_move(amt)
@@ -47,9 +51,9 @@ function show_menu()
 
     function draw_menu()
         local ass = assdraw.ass_new()
-        for i,v in ipairs(opts.quality_strings) do
+        for i,v in ipairs(options) do
             prepend = i == selected and "▶ - " or "○ - "
-            ass:append(prepend..v.."\\N")
+            ass:append(prepend..v.label.."\\N")
         end
         mp.set_osd_ass(0, 0, ass.text)
     end
@@ -68,7 +72,7 @@ function show_menu()
     mp.add_forced_key_binding("DOWN", "move_down", function() selected_move(1) end)
     mp.add_forced_key_binding("ENTER", "select", function()
         destroy()
-        mp.set_property("ytdl-format", opts.quality_strings[selected])
+        mp.set_property("ytdl-format", options[selected].format)
         reload_resume()
     end)
     mp.add_forced_key_binding(opts.menu_binding, "escape", destroy)
