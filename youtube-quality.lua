@@ -13,8 +13,38 @@ local msg = require 'mp.msg'
 local assdraw = require 'mp.assdraw'
 
 local opts = {
-    menu_binding = "ctrl+f",
+    --key bindings
+    toggle_menu_binding = "ctrl+f",
+    up_binding = "UP",
+    down_binding = "DOWN",
+    select_binding = "ENTER",
+
+    --formatting / cursors
+    selected_and_active     = "▶ - ",
+    selected_and_inactive   = "● - ",
+    unselected_and_active   = "▷ - ",
+    unselected_and_inactive = "○ - ",
+
+	--font size scales by window, if false requires larger font and padding sizes
+	scale_playlist_by_window=false,
+
+    --playlist ass style overrides inside curly brackets, \keyvalue is one field, extra \ for escape in lua
+    --example {\\fnUbuntu\\fs10\\b0\\bord1} equals: font=Ubuntu, size=10, bold=no, border=1
+    --read http://docs.aegisub.org/3.2/ASS_Tags/ for reference of tags
+    --undeclared tags will use default osd settings
+    --these styles will be used for the whole playlist. More specific styling will need to be hacked in
+    style_ass_tags = "",
+
+    --paddings for top left corner
+    text_padding_x = 5,
+    text_padding_y = 5,
+
+
+
+    --other
     menu_timeout = 10,
+
+    --default menu entries
     quality_strings=[[
     [
     {"4320p" : "bestvideo[height<=?4320p]+bestaudio/best"},
@@ -28,11 +58,15 @@ local opts = {
     ]
     ]],
 }
-(require 'mp.options').read_options(opts)
+(require 'mp.options').read_options(opts, "youtube-quality")
 opts.quality_strings = utils.parse_json(opts.quality_strings)
+
 
 function show_menu()
     local selected = 1
+    local active = 0
+    local current_ytdl_format = mp.get_property("ytdl-format")
+    msg.info("current ytdl-format: "..current_ytdl_format)
     local num_options = 0
     local options = {}
 
@@ -40,6 +74,9 @@ function show_menu()
         num_options = num_options + 1
         for k,v2 in pairs(v) do
             options[i] = {label = k, format=v2}
+            if v2 == current_ytdl_format then
+                active = i
+            end
         end
     end
 
@@ -51,14 +88,30 @@ function show_menu()
         timeout:resume()
         draw_menu()
     end
+    function choose_prefix(i)
+        if     i == selected and i == active then return opts.selected_and_active 
+        elseif i == selected then return opts.selected_and_inactive end
+
+        if     i ~= selected and i == active then return opts.unselected_and_active
+        elseif i ~= selected then return opts.unselected_and_inactive end
+        return "+ "
+    end
 
     function draw_menu()
         local ass = assdraw.ass_new()
+
+        ass:pos(opts.text_padding_x, opts.text_padding_y)
+        ass:append(opts.style_ass_tags)
+        msg.info("style_ass_tags: "..opts.style_ass_tags)
+
         for i,v in ipairs(options) do
-            prepend = i == selected and "▶ - " or "○ - "
-            ass:append(prepend..v.label.."\\N")
+            ass:append(choose_prefix(i)..v.label.."\\N")
         end
-        mp.set_osd_ass(0, 0, ass.text)
+
+		local w, h = mp.get_osd_size()
+		if opts.scale_playlist_by_window then w,h = 0, 0 end
+		mp.set_osd_ass(w, h, ass.text)
+		--mp.set_osd_ass(0, 0, ass.text)
     end
 
     function destroy()
@@ -71,21 +124,21 @@ function show_menu()
     end
     timeout = mp.add_periodic_timer(opts.menu_timeout, destroy)
 
-    mp.add_forced_key_binding("UP", "move_up", function() selected_move(-1) end)
-    mp.add_forced_key_binding("DOWN", "move_down", function() selected_move(1) end)
-    mp.add_forced_key_binding("ENTER", "select", function()
+    mp.add_forced_key_binding(opts.up_binding,     "move_up",   function() selected_move(-1) end)
+    mp.add_forced_key_binding(opts.down_binding,   "move_down", function() selected_move(1)  end)
+    mp.add_forced_key_binding(opts.select_binding, "select",    function()
         destroy()
         mp.set_property("ytdl-format", options[selected].format)
         reload_resume()
     end)
-    mp.add_forced_key_binding(opts.menu_binding, "escape", destroy)
+    mp.add_forced_key_binding(opts.toggle_menu_binding, "escape", destroy)
 
     draw_menu()
     return 
 end
 
 -- keybind to launch menu
-mp.add_forced_key_binding(opts.menu_binding, "quality-menu", show_menu)
+mp.add_forced_key_binding(opts.toggle_menu_binding, "quality-menu", show_menu)
 
 
 -- credit belongs to reload.lua (https://github.com/4e6/mpv-reload/)
