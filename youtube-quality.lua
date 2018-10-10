@@ -33,16 +33,19 @@ local opts = {
     --read http://docs.aegisub.org/3.2/ASS_Tags/ for reference of tags
     --undeclared tags will use default osd settings
     --these styles will be used for the whole playlist. More specific styling will need to be hacked in
-    style_ass_tags = "",
+    --
+    --(a monospaced font is recommended but not required)
+    style_ass_tags = "{\\fnmonospace}",
 
     --paddings for top left corner
     text_padding_x = 5,
     text_padding_y = 5,
 
-
-
     --other
     menu_timeout = 10,
+
+    --use youtube-dl to fetch a list of available formats (overrides quality_strings)
+    fetch_formats = true,
 
     --default menu entries
     quality_strings=[[
@@ -66,17 +69,34 @@ function show_menu()
     local selected = 1
     local active = 0
     local current_ytdl_format = mp.get_property("ytdl-format")
-    msg.info("current ytdl-format: "..current_ytdl_format)
+    msg.verbose("current ytdl-format: "..current_ytdl_format)
     local num_options = 0
     local options = {}
 
-    for i,v in ipairs(opts.quality_strings) do
-        num_options = num_options + 1
-        for k,v2 in pairs(v) do
-            options[i] = {label = k, format=v2}
-            if v2 == current_ytdl_format then
-                active = i
+
+    if opts.fetch_formats then
+        options, num_options = download_formats()
+    end
+
+    if next(options) == nil then
+        for i,v in ipairs(opts.quality_strings) do
+            num_options = num_options + 1
+            for k,v2 in pairs(v) do
+                options[i] = {label = k, format=v2}
+                if v2 == current_ytdl_format then
+                    active = i
+                    selected = active
+                end
             end
+        end
+    end
+
+    --set the cursor to the currently format
+    for i,v in ipairs(options) do
+        if v.format == current_ytdl_format then
+            active = i
+            selected = active
+            break
         end
     end
 
@@ -94,7 +114,7 @@ function show_menu()
 
         if     i ~= selected and i == active then return opts.unselected_and_active
         elseif i ~= selected then return opts.unselected_and_inactive end
-        return "+ "
+        return "> " --shouldn't get here.
     end
 
     function draw_menu()
@@ -102,7 +122,6 @@ function show_menu()
 
         ass:pos(opts.text_padding_x, opts.text_padding_y)
         ass:append(opts.style_ass_tags)
-        msg.info("style_ass_tags: "..opts.style_ass_tags)
 
         for i,v in ipairs(options) do
             ass:append(choose_prefix(i)..v.label.."\\N")
@@ -111,7 +130,6 @@ function show_menu()
 		local w, h = mp.get_osd_size()
 		if opts.scale_playlist_by_window then w,h = 0, 0 end
 		mp.set_osd_ass(w, h, ass.text)
-		--mp.set_osd_ass(0, 0, ass.text)
     end
 
     function destroy()
@@ -124,8 +142,8 @@ function show_menu()
     end
     timeout = mp.add_periodic_timer(opts.menu_timeout, destroy)
 
-    mp.add_forced_key_binding(opts.up_binding,     "move_up",   function() selected_move(-1) end)
-    mp.add_forced_key_binding(opts.down_binding,   "move_down", function() selected_move(1)  end)
+    mp.add_forced_key_binding(opts.up_binding,     "move_up",   function() selected_move(-1) end, {repeatable=true})
+    mp.add_forced_key_binding(opts.down_binding,   "move_down", function() selected_move(1)  end, {repeatable=true})
     mp.add_forced_key_binding(opts.select_binding, "select",    function()
         destroy()
         mp.set_property("ytdl-format", options[selected].format)
@@ -136,6 +154,84 @@ function show_menu()
     draw_menu()
     return 
 end
+
+local ytdl = {
+    path = "youtube-dl",
+    searched = false,
+    blacklisted = {}
+}
+
+format_cache={}
+function download_formats()
+    local function exec(args)
+        local ret = utils.subprocess({args = args})
+        return ret.status, ret.stdout, ret
+    end
+
+    local function table_size(t)
+        s = 0
+        for i,v in ipairs(t) do
+            s = s+1
+        end
+        return s
+    end
+
+    local url = mp.get_property("path")
+
+    -- don't fetch the format list if we already have it
+    if format_cache[url] ~= nil then 
+        local res = format_cache[url]
+        return res, table_size(res)
+    end
+    mp.osd_message("fetching available formats with youtube-dl...", 60)
+
+    if not (ytdl.searched) then
+        local ytdl_mcd = mp.find_config_file("youtube-dl")
+        if not (ytdl_mcd == nil) then
+            msg.verbose("found youtube-dl at: " .. ytdl_mcd)
+            ytdl.path = ytdl_mcd
+        end
+        ytdl.searched = true
+    end
+
+    local command = {ytdl.path, "--no-warnings", "-J"}
+    table.insert(command, url)
+    local es, json, result = exec(command)
+
+    if (es < 0) or (json == nil) or (json == "") then
+        mp.osd_message("fetching formats failed...", 1)
+        msg.error("failed to get format list: " .. err)
+        return {}, 0
+    end
+
+    local json, err = utils.parse_json(json)
+
+    if (json == nil) then
+        mp.osd_message("fetching formats failed...", 1)
+        msg.error("failed to parse JSON data: " .. err)
+        return {}, 0
+    end
+
+    res = {}
+    msg.verbose("youtube-dl succeeded!")
+    for i,v in ipairs(json.formats) do
+        if v.vcodec ~= "none" then
+            local fps = v.fps and v.fps.."fps" or ""
+            local resolution = string.format("%sx%s", v.width, v.height)
+            local l = string.format("%-9s %-5s (%-4s / %s)", resolution, fps, v.ext, v.vcodec)
+            local f = string.format("%s+bestaudio/best", v.format_id)
+            table.insert(res, {label=l, format=f, width=v.width })
+        end
+    end
+
+    table.sort(res, function(a, b) return a.width > b.width end)
+
+    mp.osd_message("", 0)
+    format_cache[url] = res
+    return res, table_size(res)
+end
+
+
 
 -- keybind to launch menu
 mp.add_forced_key_binding(opts.toggle_menu_binding, "quality-menu", show_menu)

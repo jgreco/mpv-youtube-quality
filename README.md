@@ -7,9 +7,11 @@ Toggle the menu with ctrl+f (configurable).   Select from the list (configurable
 
 ## Plans For Future Enhancement
 - [x] Visual indication of what the current quality level is.
-- [ ] Option to populate the quality list automatically with the exact formats available for a given video.
+- [x] Option to populate the quality list automatically with the exact formats available for a given video.
+- [ ] *\[your suggestion here\]*
 
 ## Credit
-- [reload.lua](https://github.com/4e6/mpv-reload/) for the function to reload a video while preserving the playlist.
+- [reload.lua](https://github.com/4e6/mpv-reload/), for the function to reload a video while preserving the playlist.
 - [mpv-playlistmanager](https://github.com/jonniek/mpv-playlistmanager), from which I ripped off much of the menu formatting config.
+- ytdl_hook.lua, from which I ripped off much of the youtube-dl code to fetch the format list
 - somebody on /mpv/ for the idea
