@@ -55,6 +55,7 @@ local opts = {
     {"1440p" : "bestvideo[height<=?1440]+bestaudio/best"},
     {"1080p" : "bestvideo[height<=?1080]+bestaudio/best"},
     {"720p" : "bestvideo[height<=?720]+bestaudio/best"},
+    {"480p" : "bestvideo[height<=?480]+bestaudio/best"},
     {"360p" : "bestvideo[height<=?360]+bestaudio/best"},
     {"240p" : "bestvideo[height<=?240]+bestaudio/best"},
     {"144p" : "bestvideo[height<=?144]+bestaudio/best"}
