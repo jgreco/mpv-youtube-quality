@@ -11,4 +11,5 @@ Toggle the menu with ctrl+f (configurable).   Select from the list (configurable
 
 ## Credit
 - [reload.lua](https://github.com/4e6/mpv-reload/) for the function to reload a video while preserving the playlist.
+- [mpv-playlistmanager](https://github.com/jonniek/mpv-playlistmanager), from which I ripped off much of the menu formatting config.
 - somebody on /mpv/ for the idea
