@@ -179,6 +179,8 @@ function download_formats()
 
     local url = mp.get_property("path")
 
+    url = string.gsub(url, "ytdl://", "") -- Strip possible ytdl:// prefix.
+
     -- don't fetch the format list if we already have it
     if format_cache[url] ~= nil then 
         local res = format_cache[url]
