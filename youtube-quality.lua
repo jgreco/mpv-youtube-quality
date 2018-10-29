@@ -239,46 +239,24 @@ end
 -- keybind to launch menu
 mp.add_forced_key_binding(opts.toggle_menu_binding, "quality-menu", show_menu)
 
-
--- credit belongs to reload.lua (https://github.com/4e6/mpv-reload/)
+-- special thanks to reload.lua (https://github.com/4e6/mpv-reload/)
 function reload_resume()
-    function reload(path, time_pos)
-        msg.debug("reload", path, time_pos)
-        if time_pos == nil then
-            mp.commandv("loadfile", path, "replace")
-        else
-            mp.commandv("loadfile", path, "replace", "start=+" .. time_pos)
-        end
-    end
-
-    local path = mp.get_property("path")
-    local time_pos = mp.get_property("time-pos")
-    local reload_duration = mp.get_property_native("duration")
-
-    local playlist_count = mp.get_property_number("playlist/count")
     local playlist_pos = mp.get_property_number("playlist-pos")
-    local playlist = {}
-    for i = 0, playlist_count-1 do
-        playlist[i] = mp.get_property("playlist/" .. i .. "/filename")
-    end
+    local reload_duration = mp.get_property_native("duration")
+    local time_pos = mp.get_property("time-pos")
+
+    mp.set_property_number("playlist-pos", playlist_pos)
+
     -- Tries to determine live stream vs. pre-recordered VOD. VOD has non-zero
     -- duration property. When reloading VOD, to keep the current time position
     -- we should provide offset from the start. Stream doesn't have fixed start.
     -- Decent choice would be to reload stream from it's current 'live' positon.
     -- That's the reason we don't pass the offset when reloading streams.
     if reload_duration and reload_duration > 0 then
-        msg.info("reloading video from", time_pos, "second")
-        reload(path, time_pos)
-    else
-        msg.info("reloading stream")
-        reload(path, nil)
-    end
-    msg.info("file ", playlist_pos+1, " of ", playlist_count, "in playlist")
-    for i = 0, playlist_pos-1 do
-        mp.commandv("loadfile", playlist[i], "append")
-    end
-    mp.commandv("playlist-move", 0, playlist_pos+1)
-    for i = playlist_pos+1, playlist_count-1 do
-        mp.commandv("loadfile", playlist[i], "append")
+        local function seeker()
+            mp.commandv("seek", time_pos, "absolute")
+            mp.unregister_event(seeker)
+        end
+        mp.register_event("file-loaded", seeker)
     end
 end
