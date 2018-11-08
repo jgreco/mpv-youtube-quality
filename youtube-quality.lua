@@ -65,6 +65,8 @@ local opts = {
 (require 'mp.options').read_options(opts, "youtube-quality")
 opts.quality_strings = utils.parse_json(opts.quality_strings)
 
+local destroyer = nil
+
 
 function show_menu()
     local selected = 1
@@ -140,8 +142,10 @@ function show_menu()
         mp.remove_key_binding("move_down")
         mp.remove_key_binding("select")
         mp.remove_key_binding("escape")
+        destroyer = nil
     end
     timeout = mp.add_periodic_timer(opts.menu_timeout, destroy)
+    destroyer = destroy
 
     mp.add_forced_key_binding(opts.up_binding,     "move_up",   function() selected_move(-1) end, {repeatable=true})
     mp.add_forced_key_binding(opts.down_binding,   "move_down", function() selected_move(1)  end, {repeatable=true})
@@ -235,6 +239,15 @@ function download_formats()
 end
 
 
+-- register script message to show menu
+mp.register_script_message("toggle-quality-menu", 
+function()
+    if destroyer ~= nil then
+        destroyer()
+    else
+        show_menu()
+    end
+end)
 
 -- keybind to launch menu
 mp.add_forced_key_binding(opts.toggle_menu_binding, "quality-menu", show_menu)
