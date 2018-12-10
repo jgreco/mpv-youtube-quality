@@ -250,7 +250,7 @@ function()
 end)
 
 -- keybind to launch menu
-mp.add_forced_key_binding(opts.toggle_menu_binding, "quality-menu", show_menu)
+mp.add_key_binding(opts.toggle_menu_binding, "quality-menu", show_menu)
 
 -- special thanks to reload.lua (https://github.com/4e6/mpv-reload/)
 function reload_resume()
