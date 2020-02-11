@@ -11,7 +11,7 @@ Copy youtube-quality.lua into your scripts directory, e.g.:
     cp youtube-quality.lua ~/.config/mpv/scripts/
 optional, copy the config file:
 
-    cp youtube-quality.conf ~/.config/mpv/lua-settings/
+    cp youtube-quality.conf ~/.config/mpv/script-opts/
 
 
 ## OSC extension
