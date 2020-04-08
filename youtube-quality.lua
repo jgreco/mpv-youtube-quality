@@ -15,6 +15,7 @@ local assdraw = require 'mp.assdraw'
 local opts = {
     --key bindings
     toggle_menu_binding = "ctrl+f",
+    close_menu_binding = "ESC",
     up_binding = "UP",
     down_binding = "DOWN",
     select_binding = "ENTER",
@@ -142,6 +143,7 @@ function show_menu()
         mp.remove_key_binding("move_down")
         mp.remove_key_binding("select")
         mp.remove_key_binding("escape")
+        mp.remove_key_binding("close")
         destroyer = nil
     end
     timeout = mp.add_periodic_timer(opts.menu_timeout, destroy)
@@ -151,11 +153,12 @@ function show_menu()
     mp.add_forced_key_binding(opts.down_binding,   "move_down", function() selected_move(1)  end, {repeatable=true})
     mp.add_forced_key_binding(opts.select_binding, "select",    function()
         destroy()
+        mp.set_property("ytdl-raw-options", "")		--reset youtube-dl raw options before changing format
         mp.set_property("ytdl-format", options[selected].format)
         reload_resume()
     end)
     mp.add_forced_key_binding(opts.toggle_menu_binding, "escape", destroy)
-
+    mp.add_forced_key_binding(opts.close_menu_binding, "close", destroy)	--close menu using ESC
     draw_menu()
     return 
 end
