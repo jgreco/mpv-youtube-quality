@@ -18,6 +18,7 @@ local opts = {
     up_binding = "UP",
     down_binding = "DOWN",
     select_binding = "ENTER",
+    ytdl_format = "bestvideo+bestaudio/best",
 
     --formatting / cursors
     selected_and_active     = "▶ - ",
@@ -67,6 +68,7 @@ opts.quality_strings = utils.parse_json(opts.quality_strings)
 
 local destroyer = nil
 
+mp.set_property("ytdl-format",opts.ytdl_format)
 
 function show_menu()
     local selected = 1
