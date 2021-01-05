@@ -201,7 +201,7 @@ function download_formats()
         ytdl.searched = true
     end
 
-    local command = {ytdl.path, "--no-warnings", "--no-playlist", "-J"}
+    local command = {ytdl.path, "--no-warnings", "--no-playlist", "-j"}
     table.insert(command, url)
     local es, json, result = exec(command)
 
