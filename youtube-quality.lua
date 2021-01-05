@@ -226,7 +226,7 @@ function download_formats()
             local fps = v.fps and v.fps.."fps" or ""
             local resolution = string.format("%sx%s", v.width, v.height)
             local l = string.format("%-9s %-5s (%-4s / %s)", resolution, fps, v.ext, v.vcodec)
-            local f = string.format("%s+bestaudio/best", v.format_id)
+            local f = string.format("%s+bestaudio/%s", v.format_id, v.format_id)
             table.insert(res, {label=l, format=f, width=v.width, height=v.height})
         end
     end
