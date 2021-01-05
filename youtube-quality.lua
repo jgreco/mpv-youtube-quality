@@ -227,11 +227,13 @@ function download_formats()
             local resolution = string.format("%sx%s", v.width, v.height)
             local l = string.format("%-9s %-5s (%-4s / %s)", resolution, fps, v.ext, v.vcodec)
             local f = string.format("%s+bestaudio/best", v.format_id)
-            table.insert(res, {label=l, format=f, width=v.width })
+            table.insert(res, {label=l, format=f, width=v.width, height=v.height})
         end
     end
 
-    table.sort(res, function(a, b) return a.width > b.width end)
+    table.sort(res, function(a, b)
+        return ((a.width or 1) * (a.height or 1)) > ((b.width or 1) * (b.height or 1))
+    end)
 
     mp.osd_message("", 0)
     format_cache[url] = res
