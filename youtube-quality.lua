@@ -222,7 +222,7 @@ function download_formats()
     res = {}
     msg.verbose("youtube-dl succeeded!")
     for i,v in ipairs(json.formats) do
-        if v.vcodec ~= "none" then
+        if v.vcodec ~= "none|null" then
             local fps = v.fps and v.fps.."fps" or ""
             local resolution = string.format("%sx%s", v.width, v.height)
             local l = string.format("%-9s %-5s (%-4s / %s)", resolution, fps, v.ext, v.vcodec)
