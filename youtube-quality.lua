@@ -201,7 +201,7 @@ function download_formats()
         ytdl.searched = true
     end
 
-    local command = {ytdl.path, "--no-warnings", "--no-playlist", "-J"}
+    local command = {ytdl.path, "--no-warnings", "--no-playlist", "-j"}
     table.insert(command, url)
     local es, json, result = exec(command)
 
@@ -222,16 +222,18 @@ function download_formats()
     res = {}
     msg.verbose("youtube-dl succeeded!")
     for i,v in ipairs(json.formats) do
-        if v.vcodec ~= "none" then
+        if v.vcodec ~= "none|null" then
             local fps = v.fps and v.fps.."fps" or ""
             local resolution = string.format("%sx%s", v.width, v.height)
             local l = string.format("%-9s %-5s (%-4s / %s)", resolution, fps, v.ext, v.vcodec)
-            local f = string.format("%s+bestaudio/best", v.format_id)
-            table.insert(res, {label=l, format=f, width=v.width })
+            local f = string.format("%s+bestaudio/%s/best", v.format_id, v.format_id)
+            table.insert(res, {label=l, format=f, width=v.width, height=v.height})
         end
     end
 
-    table.sort(res, function(a, b) return a.width > b.width end)
+    table.sort(res, function(a, b)
+        return ((a.width or 1) * (a.height or 1)) > ((b.width or 1) * (b.height or 1))
+    end)
 
     mp.osd_message("", 0)
     format_cache[url] = res
