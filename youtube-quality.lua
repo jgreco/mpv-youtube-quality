@@ -273,11 +273,24 @@ function download_formats()
                 local acodec = f.acodec == nil and " + unknown" or f.acodec ~= "none" and " + "..f.acodec or ""
                 local l = string.format("%-9s %-5s %9s %9s (%-4s / %s%s)", resolution, fps, tbr, size, f.ext, vcodec, acodec)
                 local f = string.format("%s+bestaudio/best", v.format_id)
-                table.insert(res, {label=l, format=f, width=v.width })
+                table.insert(res, {label=l, format=f.format_id, width=f.width, size=f.filesize, fps=f.fps, tbr=f.tbr })
             end
         end
 
-        table.sort(res, function(a, b) return a.width > b.width end)
+        table.sort(res,
+        function(a, b)
+            if a.width ~= nil and b.width ~= nil and a.width ~= b.width then
+                return a.width > b.width
+            elseif a.fps ~= nil and b.fps ~= nil and a.fps ~= b.fps then
+                return a.fps > b.fps
+            elseif a.tbr ~= nil and b.tbr ~= nil and a.tbr ~= b.tbr then
+                return a.tbr > b.tbr
+            elseif a.size ~= nil and b.size ~= nil and a.size ~= b.size then
+                return a.size > b.size
+            elseif a.format ~= nil and b.format ~= nil and a.format ~= b.format then
+                return a.format > b.format
+            end
+        end)
     end
 
     mp.osd_message("", 0)
