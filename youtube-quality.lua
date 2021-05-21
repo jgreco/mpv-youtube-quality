@@ -224,17 +224,59 @@ function download_formats()
 
     res = {}
     msg.verbose("youtube-dl succeeded!")
+
+    function scale_filesize(size)
+        size = tonumber(size)
+        if size == nil then
+            return "unknown"
+        end
+
+        counter = 0
+        while size > 1024 do
+            size = size / 1024
+            counter = counter+1
+        end
+
+        if counter >= 3 then return string.format("%.1fGiB", size)
+        elseif counter >= 2 then return string.format("%.1fMiB", size)
+        elseif counter >= 1 then return string.format("%.1fKiB", size)
+        else return string.format("%.1fB  ", size)
+        end
+    end
+
+    function scale_bitrate(br)
+        br = tonumber(br)
+        if br == nil then
+            return "unknown"
+        end
+
+        counter = 0
+        while br > 1000 do
+            br = br / 1000
+            counter = counter+1
+        end
+
+        if counter >= 2 then return string.format("%.1fGbps", br)
+        elseif counter >= 1 then return string.format("%.1fMbps", br)
+        else return string.format("%.1fKbps", br)
+        end
+    end
+
     if json.formats ~= nil then
-        for i,v in ipairs(json.formats) do
-            if v.vcodec ~= "none" then
-                local fps = v.fps and v.fps.."fps" or ""
-                local resolution = string.format("%sx%s", v.width, v.height)
-                local l = string.format("%-9s %-5s (%-4s / %s)", resolution, fps, v.ext, v.vcodec)
+        for i,f in ipairs(json.formats) do
+            if f.vcodec ~= "none" then
+                local fps = f.fps and f.fps.."fps" or ""
+                local resolution = string.format("%sx%s", f.width, f.height)
+                local size = scale_filesize(f.filesize)
+                local tbr = scale_bitrate(f.tbr)
+                local vcodec = f.vcodec == nil and "unknown" or f.vcodec
+                local acodec = f.acodec == nil and " + unknown" or f.acodec ~= "none" and " + "..f.acodec or ""
+                local l = string.format("%-9s %-5s %9s %9s (%-4s / %s%s)", resolution, fps, tbr, size, f.ext, vcodec, acodec)
                 local f = string.format("%s+bestaudio/best", v.format_id)
                 table.insert(res, {label=l, format=f, width=v.width })
             end
         end
-        
+
         table.sort(res, function(a, b) return a.width > b.width end)
     end
 
