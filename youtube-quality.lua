@@ -224,17 +224,19 @@ function download_formats()
 
     res = {}
     msg.verbose("youtube-dl succeeded!")
-    for i,v in ipairs(json.formats) do
-        if v.vcodec ~= "none" then
-            local fps = v.fps and v.fps.."fps" or ""
-            local resolution = string.format("%sx%s", v.width, v.height)
-            local l = string.format("%-9s %-5s (%-4s / %s)", resolution, fps, v.ext, v.vcodec)
-            local f = string.format("%s+bestaudio/best", v.format_id)
-            table.insert(res, {label=l, format=f, width=v.width })
+    if json.formats ~= nil then
+        for i,v in ipairs(json.formats) do
+            if v.vcodec ~= "none" then
+                local fps = v.fps and v.fps.."fps" or ""
+                local resolution = string.format("%sx%s", v.width, v.height)
+                local l = string.format("%-9s %-5s (%-4s / %s)", resolution, fps, v.ext, v.vcodec)
+                local f = string.format("%s+bestaudio/best", v.format_id)
+                table.insert(res, {label=l, format=f, width=v.width })
+            end
         end
+        
+        table.sort(res, function(a, b) return a.width > b.width end)
     end
-
-    table.sort(res, function(a, b) return a.width > b.width end)
 
     mp.osd_message("", 0)
     format_cache[url] = res
