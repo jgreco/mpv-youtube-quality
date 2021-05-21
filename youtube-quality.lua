@@ -14,7 +14,8 @@ local assdraw = require 'mp.assdraw'
 
 local opts = {
     --key bindings
-    toggle_menu_binding = "ctrl+f",
+    toggle_video_menu_binding = "ctrl+f",
+    toggle_audio_menu_binding = "alt+f",
     close_menu_binding = "ESC",
     up_binding = "UP",
     down_binding = "DOWN",
@@ -67,42 +68,60 @@ local opts = {
 opts.quality_strings = utils.parse_json(opts.quality_strings)
 
 local destroyer = nil
-
-
-function show_menu()
+function show_menu(isvideo)
     local selected = 1
     local active = 0
-    local current_ytdl_format = mp.get_property("ytdl-format")
-    msg.verbose("current ytdl-format: "..current_ytdl_format)
     local num_options = 0
     local options = {}
+    local vfmt = nil
+    local afmt = nil
+    local voptions = nil
+    local aoptions = nil
+    local url = nil
 
-
-    if opts.fetch_formats then
-        options, num_options = download_formats()
+    if destroyer ~= nil then
+        destroyer()
     end
 
-    if next(options) == nil then
-        for i,v in ipairs(opts.quality_strings) do
-            num_options = num_options + 1
-            for k,v2 in pairs(v) do
-                options[i] = {label = k, format=v2}
-                if v2 == current_ytdl_format then
-                    active = i
-                    selected = active
-                end
-            end
+    voptions, aoptions , vfmt, afmt, url = download_formats()
+    if voptions == nil then
+        return
+    end
+
+    options = isvideo and voptions or aoptions
+
+    function format_string(vfmt, afmt)
+        if vfmt ~= nil and afmt ~= nil then
+            return vfmt.."+"..afmt
+        elseif vfmt ~= nil then
+            return vfmt
+        elseif afmt ~= nil then
+            return afmt
+        else
+            return ""
         end
     end
 
+    msg.verbose("current ytdl-format: "..format_string(vfmt, afmt))
+
     --set the cursor to the currently format
     for i,v in ipairs(options) do
-        if v.format == current_ytdl_format then
+        if v.format == (isvideo and vfmt or afmt) then
             active = i
             selected = active
             break
         end
     end
+
+    local function table_size(t)
+        s = 0
+        for i,v in ipairs(t) do
+            s = s+1
+        end
+        return s
+    end
+
+    num_options = table_size(options)
 
     function selected_move(amt)
         selected = selected + amt
@@ -128,8 +147,12 @@ function show_menu()
         ass:pos(opts.text_padding_x, opts.text_padding_y)
         ass:append(opts.style_ass_tags)
 
-        for i,v in ipairs(options) do
-            ass:append(choose_prefix(i)..v.label.."\\N")
+        if options[1] ~= nil then
+            for i,v in ipairs(options) do
+                ass:append(choose_prefix(i)..v.label.."\\N")
+            end
+        else
+            ass:append("no formats found")
         end
 
 		local w, h = mp.get_osd_size()
@@ -147,18 +170,28 @@ function show_menu()
         mp.remove_key_binding("close")
         destroyer = nil
     end
+
     timeout = mp.add_periodic_timer(opts.menu_timeout, destroy)
     destroyer = destroy
 
     mp.add_forced_key_binding(opts.up_binding,     "move_up",   function() selected_move(-1) end, {repeatable=true})
     mp.add_forced_key_binding(opts.down_binding,   "move_down", function() selected_move(1)  end, {repeatable=true})
-    mp.add_forced_key_binding(opts.select_binding, "select",    function()
-        destroy()
-        mp.set_property("ytdl-raw-options", "")		--reset youtube-dl raw options before changing format
-        mp.set_property("ytdl-format", options[selected].format)
-        reload_resume()
-    end)
-    mp.add_forced_key_binding(opts.toggle_menu_binding, "escape", destroy)
+    if options[1] ~= nil then
+        mp.add_forced_key_binding(opts.select_binding, "select", function()
+            destroy()
+            if isvideo == true then
+                vfmt = options[selected].format
+                url_data[url].vfmt = vfmt
+            else
+                afmt = options[selected].format
+                url_data[url].afmt = afmt
+            end
+            mp.set_property("ytdl-raw-options", "")		--reset youtube-dl raw options before changing format
+            mp.set_property("ytdl-format", format_string(vfmt, afmt))
+            reload_resume()
+        end)
+    end
+    mp.add_forced_key_binding(isvideo and opts.toggle_video_menu_binding or opts.toggle_audio_menu_binding, "escape", destroy)
     mp.add_forced_key_binding(opts.close_menu_binding, "close", destroy)	--close menu using ESC
     draw_menu()
     return
@@ -170,30 +203,46 @@ local ytdl = {
     blacklisted = {}
 }
 
-format_cache={}
+url_data={}
 function download_formats()
-    local function exec(args)
-        local ret = utils.subprocess({args = args})
-        return ret.status, ret.stdout, ret
-    end
 
-    local function table_size(t)
-        s = 0
-        for i,v in ipairs(t) do
-            s = s+1
+    function get_url()
+        local path = mp.get_property("path")
+        path = string.gsub(path, "ytdl://", "") -- Strip possible ytdl:// prefix.
+
+        function is_url(s)
+            -- adapted the regex from https://stackoverflow.com/questions/3809401/what-is-a-good-regular-expression-to-match-a-url
+            return nil ~= string.match(path, "^[%w]-://[-a-zA-Z0-9@:%._\\+~#=]+%.[a-zA-Z0-9()][a-zA-Z0-9()]?[a-zA-Z0-9()]?[a-zA-Z0-9()]?[a-zA-Z0-9()]?[a-zA-Z0-9()]?[-a-zA-Z0-9()@:%_\\+.~#?&/=]*")
         end
-        return s
+
+        return is_url(path) and path or nil
     end
 
-    local url = mp.get_property("path")
-
-    url = string.gsub(url, "ytdl://", "") -- Strip possible ytdl:// prefix.
-
-    -- don't fetch the format list if we already have it
-    if format_cache[url] ~= nil then 
-        local res = format_cache[url]
-        return res, table_size(res)
+    local url = get_url()
+    if url == nil then
+        return
     end
+
+    if url_data[url] ~= nil then
+        data = url_data[url]
+        return data.voptions, data.aoptions, data.vfmt, data.afmt, url
+    end
+
+    local vres = {}
+    local ares = {}
+    local vfmt = nil
+    local afmt = nil
+
+    if opts.fetch_formats == false then
+        for i,v in ipairs(opts.quality_strings) do
+            for k,v2 in pairs(v) do
+                vres[i] = {label = k, format=v2}
+            end
+        end
+        url_data[url] = {voptions=vres, aoptions=ares, vfmt=nil, afmt=nil}
+        return vres, ares , vfmt, afmt, url
+    end
+
     mp.osd_message("fetching available formats with youtube-dl...", 60)
 
     if not (ytdl.searched) then
@@ -205,13 +254,18 @@ function download_formats()
         ytdl.searched = true
     end
 
-    local command = {ytdl.path, "--no-warnings", "--no-playlist", "-j", url}
+    local function exec(args)
+        local ret = utils.subprocess({args = args})
+        return ret.status, ret.stdout, ret
+    end
+
+    local command = {ytdl.path, "--no-warnings", "--no-playlist", "-j", "-f", mp.get_property("ytdl-format"), url}
     local es, json, result = exec(command)
 
     if (es < 0) or (json == nil) or (json == "") then
         mp.osd_message("fetching formats failed...", 1)
         msg.error("failed to get format list: " .. es)
-        return {}, 0
+        return
     end
 
     local json, err = utils.parse_json(json)
@@ -219,11 +273,26 @@ function download_formats()
     if (json == nil) then
         mp.osd_message("fetching formats failed...", 1)
         msg.error("failed to parse JSON data: " .. err)
-        return {}, 0
+        return
     end
 
-    res = {}
     msg.verbose("youtube-dl succeeded!")
+
+    function string_split (inputstr, sep)
+        if sep == nil then
+            sep = "%s"
+        end
+        local t={}
+        for str in string.gmatch(inputstr, "([^"..sep.."]+)") do
+            table.insert(t, str)
+        end
+        return t
+    end
+
+    local original_format=json.format_id
+    local formats_split = string_split(original_format, "+")
+    vfmt = formats_split[1]
+    afmt = formats_split[2]
 
     function scale_filesize(size)
         size = tonumber(size)
@@ -272,12 +341,16 @@ function download_formats()
                 local vcodec = f.vcodec == nil and "unknown" or f.vcodec
                 local acodec = f.acodec == nil and " + unknown" or f.acodec ~= "none" and " + "..f.acodec or ""
                 local l = string.format("%-9s %-5s %9s %9s (%-4s / %s%s)", resolution, fps, tbr, size, f.ext, vcodec, acodec)
-                local f = string.format("%s+bestaudio/best", v.format_id)
-                table.insert(res, {label=l, format=f.format_id, width=f.width, size=f.filesize, fps=f.fps, tbr=f.tbr })
+                table.insert(vres, {label=l, format=f.format_id, width=f.width, size=f.filesize, fps=f.fps, tbr=f.tbr })
+            else
+                local size = scale_filesize(f.filesize)
+                local tbr = scale_bitrate(f.tbr)
+                local l = string.format("%6sHz %9s %9s (%-4s / %s)", f.asr, tbr, size, f.ext, f.acodec)
+                table.insert(ares, {label=l, format=f.format_id, size=f.filesize, asr=f.asr, tbr=f.tbr })
             end
         end
 
-        table.sort(res,
+        table.sort(vres,
         function(a, b)
             if a.width ~= nil and b.width ~= nil and a.width ~= b.width then
                 return a.width > b.width
@@ -291,26 +364,28 @@ function download_formats()
                 return a.format > b.format
             end
         end)
+        table.sort(ares,
+        function(a, b)
+            if a.asr ~= nil and b.asr ~= nil and a.asr ~= b.asr then
+                return a.asr > b.asr
+            elseif a.tbr ~= nil and b.tbr ~= nil and a.tbr ~= b.tbr then
+                return a.tbr > b.tbr
+            elseif a.size ~= nil and b.size ~= nil and a.size ~= b.size then
+                return a.size > b.size
+            elseif a.format ~= nil and b.format ~= nil and a.format ~= b.format then
+                return a.format > b.format
+            end
+        end)
     end
 
     mp.osd_message("", 0)
-    format_cache[url] = res
-    return res, table_size(res)
+    url_data[url] = {voptions=vres, aoptions=ares, vfmt=vfmt, afmt=afmt}
+    return vres, ares , vfmt, afmt, url
 end
 
-
--- register script message to show menu
-mp.register_script_message("toggle-quality-menu", 
-function()
-    if destroyer ~= nil then
-        destroyer()
-    else
-        show_menu()
-    end
-end)
-
 -- keybind to launch menu
-mp.add_key_binding(opts.toggle_menu_binding, "quality-menu", show_menu)
+mp.add_key_binding(opts.toggle_video_menu_binding, "quality-menu-video", function() show_menu(true) end)
+mp.add_key_binding(opts.toggle_audio_menu_binding, "quality-menu-audio", function() show_menu(false) end)
 
 -- special thanks to reload.lua (https://github.com/4e6/mpv-reload/)
 function reload_resume()
