@@ -428,5 +428,6 @@ function file_start()
         end
     end
     path = new_path
+    download_formats()
 end
 mp.register_event("start-file", file_start)
