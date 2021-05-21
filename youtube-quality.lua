@@ -205,8 +205,7 @@ function download_formats()
         ytdl.searched = true
     end
 
-    local command = {ytdl.path, "--no-warnings", "--no-playlist", "-J"}
-    table.insert(command, url)
+    local command = {ytdl.path, "--no-warnings", "--no-playlist", "-j", url}
     local es, json, result = exec(command)
 
     if (es < 0) or (json == nil) or (json == "") then
