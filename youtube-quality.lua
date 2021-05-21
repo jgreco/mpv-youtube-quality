@@ -63,6 +63,10 @@ local opts = {
     {"144p" : "bestvideo[height<=?144]+bestaudio/best"}
     ]
     ]],
+
+    --reset youtube-dl format to the original format string when changing files (e.g. going to the next playlist entry)
+    --if file was opened previously, reset to previously selected format
+    reset_format = true,
 }
 (require 'mp.options').read_options(opts, "youtube-quality")
 opts.quality_strings = utils.parse_json(opts.quality_strings)
@@ -408,3 +412,21 @@ function reload_resume()
         mp.register_event("file-loaded", seeker)
     end
 end
+
+local original_format = mp.get_property("ytdl-format")
+local path = nil
+function file_start()
+    local new_path = mp.get_property("path")
+    if opts.reset_format and path ~= nil and new_path ~= path then
+        local data = url_data[new_path]
+        if data ~= nil then
+            msg.verbose("setting previously set format")
+            mp.set_property("ytdl-format", format_string(data.vfmt, data.afmt))
+        else
+            msg.verbose("setting original format")
+            mp.set_property("ytdl-format", original_format)
+        end
+    end
+    path = new_path
+end
+mp.register_event("start-file", file_start)
