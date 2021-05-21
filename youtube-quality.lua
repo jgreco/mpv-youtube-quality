@@ -112,8 +112,9 @@ function show_menu()
         timeout:resume()
         draw_menu()
     end
+
     function choose_prefix(i)
-        if     i == selected and i == active then return opts.selected_and_active 
+        if     i == selected and i == active then return opts.selected_and_active
         elseif i == selected then return opts.selected_and_inactive end
 
         if     i ~= selected and i == active then return opts.unselected_and_active
@@ -160,7 +161,7 @@ function show_menu()
     mp.add_forced_key_binding(opts.toggle_menu_binding, "escape", destroy)
     mp.add_forced_key_binding(opts.close_menu_binding, "close", destroy)	--close menu using ESC
     draw_menu()
-    return 
+    return
 end
 
 local ytdl = {
