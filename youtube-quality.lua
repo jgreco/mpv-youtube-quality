@@ -211,7 +211,7 @@ function download_formats()
 
     if (es < 0) or (json == nil) or (json == "") then
         mp.osd_message("fetching formats failed...", 1)
-        msg.error("failed to get format list: " .. err)
+        msg.error("failed to get format list: " .. es)
         return {}, 0
     end
 
