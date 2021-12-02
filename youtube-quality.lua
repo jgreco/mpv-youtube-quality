@@ -263,7 +263,16 @@ function download_formats()
         return ret.status, ret.stdout, ret
     end
 
-    local command = {ytdl.path, "--no-warnings", "--no-playlist", "-j", "-f", mp.get_property("ytdl-format"), url}
+	local ytdl_format = mp.get_property("ytdl-format")
+	local command = nil
+	if (ytdl_format == nil or ytdl_format == "") then
+		command = {ytdl.path, "--no-warnings", "--no-playlist", "-j", url}
+	else
+		command = {ytdl.path, "--no-warnings", "--no-playlist", "-j", "-f", ytdl_format, url}
+	end
+	
+	msg.verbose("calling youtube-dl with command: " .. table.concat(command, " "))
+
     local es, json, result = exec(command)
 
     if (es < 0) or (json == nil) or (json == "") then
