@@ -355,7 +355,7 @@ function download_formats()
                 local acodec = f.acodec == nil and " + unknown" or f.acodec ~= "none" and " + "..f.acodec or ""
                 local l = string.format("%-9s %-5s %9s %9s (%-4s / %s%s)", resolution, fps, tbr, size, f.ext, vcodec, acodec)
                 table.insert(vres, {label=l, format=f.format_id, width=f.width, size=f.filesize, fps=f.fps, tbr=f.tbr })
-            else
+            elseif f.acodec ~= "none" then
                 local size = scale_filesize(f.filesize)
                 local tbr = scale_bitrate(f.tbr)
                 local l = string.format("%6sHz %9s %9s (%-4s / %s)", f.asr, tbr, size, f.ext, f.acodec)
