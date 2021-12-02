@@ -1,9 +1,10 @@
 # youtube-quality
-A userscript for MPV that allows you to change youtube video quality (ytdl-format) on the fly, as though you were using the web player.
+A userscript for MPV that allows you to change youtube video quality and audio quality (ytdl-format) on the fly.
 
-![screenshot](quality-menu.png)
+![screenshot](quality-menu-video.png)
+![screenshot](quality-menu-audio.png)
 
-Toggle the menu with ctrl+f (configurable).   Select from the list with the arrow keys (configurable), and press enter (configurable) to select.  Menu times out after 10 seconds (configurable.)
+Toggle the menu with ctrl+f for video and alt+f for audio (configurable).   Select from the list with the arrow keys (configurable), and press enter (configurable) to select.  Menu times out after 10 seconds (configurable).
 
 ## Installation
 Copy youtube-quality.lua into your scripts directory, e.g.:
