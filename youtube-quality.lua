@@ -349,7 +349,12 @@ function download_formats()
             if f.vcodec ~= "none" then
                 local fps = f.fps and f.fps.."fps" or ""
                 local resolution = string.format("%sx%s", f.width, f.height)
-                local size = scale_filesize(f.filesize)
+                local size = nil
+                if f.filesize == nil and f.filesize_approx then
+                    size = "~"..scale_filesize(f.filesize_approx)
+                else
+                    size = scale_filesize(f.filesize)
+                end
                 local tbr = scale_bitrate(f.tbr)
                 local vcodec = f.vcodec == nil and "unknown" or f.vcodec
                 local acodec = f.acodec == nil and " + unknown" or f.acodec ~= "none" and " + "..f.acodec or ""
