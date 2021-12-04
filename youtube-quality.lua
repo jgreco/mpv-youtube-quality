@@ -2,7 +2,7 @@
 --
 -- Change youtube video quality on the fly.
 --
--- Diplays a menu that lets you switch to different ytdl-format settings while
+-- Displays a menu that lets you switch to different ytdl-format settings while
 -- you're in the middle of a video (just like you were using the web player).
 --
 -- Bound to ctrl-f by default.
@@ -413,10 +413,10 @@ function reload_resume()
 
     mp.set_property_number("playlist-pos", playlist_pos)
 
-    -- Tries to determine live stream vs. pre-recordered VOD. VOD has non-zero
+    -- Tries to determine live stream vs. pre-recorded VOD. VOD has non-zero
     -- duration property. When reloading VOD, to keep the current time position
     -- we should provide offset from the start. Stream doesn't have fixed start.
-    -- Decent choice would be to reload stream from it's current 'live' positon.
+    -- Decent choice would be to reload stream from it's current 'live' position.
     -- That's the reason we don't pass the offset when reloading streams.
     if reload_duration and reload_duration > 0 then
         local function seeker()
