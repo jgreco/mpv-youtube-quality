@@ -202,7 +202,7 @@ function show_menu(isvideo)
 end
 
 local ytdl = {
-    path = "youtube-dl",
+    path = "yt-dlp",
     searched = false,
     blacklisted = {}
 }
@@ -250,7 +250,7 @@ function download_formats()
     mp.osd_message("fetching available formats with youtube-dl...", 60)
 
     if not (ytdl.searched) then
-        local ytdl_mcd = mp.find_config_file("youtube-dl")
+        local ytdl_mcd = mp.find_config_file("yt-dlp")
         if not (ytdl_mcd == nil) then
             msg.verbose("found youtube-dl at: " .. ytdl_mcd)
             ytdl.path = ytdl_mcd
