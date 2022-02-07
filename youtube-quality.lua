@@ -23,9 +23,9 @@ local opts = {
 
     --formatting / cursors
     selected_and_active     = "▶ - ",
-    selected_and_inactive   = "● - ",
+    selected_and_inactive   = "●  - ",
     unselected_and_active   = "▷ - ",
-    unselected_and_inactive = "○ - ",
+    unselected_and_inactive = "○  - ",
 
 	--font size scales by window, if false requires larger font and padding sizes
 	scale_playlist_by_window=false,
