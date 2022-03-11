@@ -19,6 +19,9 @@ local opts = {
     down_binding = "DOWN",
     select_binding = "ENTER",
 
+    --youtube-dl version(could be youtube-dl or yt-dlp, or something else)
+    ytdl_ver = "yt-dlp",
+
     --formatting / cursors
     selected_and_active     = "▶ - ",
     selected_and_inactive   = "● - ",
@@ -161,7 +164,7 @@ function show_menu()
 end
 
 local ytdl = {
-    path = "youtube-dl",
+    path = opts.ytdl_ver,
     searched = false,
     blacklisted = {}
 }
