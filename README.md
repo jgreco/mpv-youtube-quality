@@ -13,6 +13,11 @@ Copy youtube-quality.lua into your scripts directory, e.g.:
 optional, copy the config file:
 
     cp youtube-quality.conf ~/.config/mpv/script-opts/
+set key bindings in input.conf:
+
+    CTRL+f script-message-to youtube_quality quality-menu-video
+    ALT+f script-message-to youtube_quality quality-menu-audio
+
 
 
 ## OSC extension
