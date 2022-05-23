@@ -77,6 +77,14 @@ local opts = {
 (require 'mp.options').read_options(opts, "youtube-quality")
 opts.quality_strings = utils.parse_json(opts.quality_strings)
 
+function video_formats_toggle()
+    show_menu(true)
+end
+
+function audio_formats_toggle()
+    show_menu(false)
+end
+
 local destroyer = nil
 function show_menu(isvideo)
     local selected = 1
@@ -432,8 +440,8 @@ function download_formats()
 end
 
 -- keybind to launch menu
-mp.register_script_message("quality-menu-video", function() show_menu(true) end)
-mp.register_script_message("quality-menu-audio", function() show_menu(false) end)
+mp.register_script_message("video_formats_toggle", video_formats_toggle)
+mp.register_script_message("audio_formats_toggle", audio_formats_toggle)
 
 -- special thanks to reload.lua (https://github.com/4e6/mpv-reload/)
 function reload_resume()
