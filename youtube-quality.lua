@@ -73,6 +73,9 @@ local opts = {
     --reset youtube-dl format to the original format string when changing files (e.g. going to the next playlist entry)
     --if file was opened previously, reset to previously selected format
     reset_format = true,
+
+    --show the video format menu after opening a file
+    start_with_menu = true,
 }
 (require 'mp.options').read_options(opts, "youtube-quality")
 opts.quality_strings = utils.parse_json(opts.quality_strings)
@@ -479,7 +482,11 @@ local function file_start()
             mp.set_property("ytdl-format", original_format)
         end
     end
+    if opts.start_with_menu and new_path ~= path then
+        video_formats_toggle()
+    else
+        download_formats()
+    end
     path = new_path
-    download_formats()
 end
 mp.register_event("start-file", file_start)
