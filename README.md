@@ -4,7 +4,7 @@ A userscript for MPV that allows you to change youtube video quality and audio q
 ![screenshot](quality-menu-video.png)
 ![screenshot](quality-menu-audio.png)
 
-Toggle the menu with ctrl+f for video and alt+f for audio (configurable).   Select from the list with the arrow keys (configurable), and press enter (configurable) to select.  Menu times out after 10 seconds (configurable).
+Simply open the video or audio menu, select your prefered format and confirm your choice. The keybindings for opening the menus are configured in input.conf, and everthing else is configured in youtube-quality.conf.
 
 ## Installation
 Copy youtube-quality.lua into your scripts directory, e.g.:
@@ -15,10 +15,8 @@ optional, copy the config file:
     cp youtube-quality.conf ~/.config/mpv/script-opts/
 set key bindings in input.conf:
 
-    CTRL+f script-message-to youtube_quality quality-menu-video
-    ALT+f script-message-to youtube_quality quality-menu-audio
-
-
+    CTRL+f script-message-to youtube_quality video_formats_toggle
+    ALT+f script-message-to youtube_quality audio_formats_toggle
 
 ## OSC extension
 **Completely optional**, an extended version of the OSC is available that includes a button to display the quality menu.  To use this, copy the youtube-quality-osc.lua file into your scripts directory and put `osc=no` in your mpv.conf.
@@ -29,7 +27,11 @@ set key bindings in input.conf:
 - [x] Visual indication of what the current quality level is.
 - [x] Option to populate the quality list automatically with the exact formats available for a given video.
 - [x] Optional OSC extension.
+- [ ] Keep data buffer of unchanged format (e.g. after selecting a new audio format, having to reload the already buffered video data is wasteful)
 - [ ] *\[your suggestion here\]*
+
+## Ask for help
+I have no idea how to go about switching out the format for one stream, while retaining the other. Any help on that would be highly appreciated.
 
 ## Credit
 - [reload.lua](https://github.com/4e6/mpv-reload/), for the function to reload a video while preserving the playlist.
