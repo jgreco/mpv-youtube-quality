@@ -439,6 +439,8 @@ local function show_menu(isvideo)
     if options[1] ~= nil then
         bind_keys(opts.select_binding, "select", function()
             destroy()
+            if selected == active then return end
+            
             if isvideo == true then
                 vfmt = options[selected].format
                 url_data[url].vfmt = vfmt
