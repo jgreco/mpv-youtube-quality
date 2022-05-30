@@ -1,26 +1,26 @@
-# youtube-quality
+# quality-menu
 A userscript for MPV that allows you to change youtube video quality and audio quality (ytdl-format) on the fly.
 
 ![screenshot](quality-menu-preview-video.jpg)
 
 ![screenshot](quality-menu-preview-audio.jpg)
 
-Simply open the video or audio menu, select your prefered format and confirm your choice. The keybindings for opening the menus are configured in input.conf, and everthing else is configured in youtube-quality.conf.
+Simply open the video or audio menu, select your prefered format and confirm your choice. The keybindings for opening the menus are configured in input.conf, and everthing else is configured in quality-menu.conf.
 
 ## Installation
-Copy youtube-quality.lua into your scripts directory, e.g.:
+Copy quality-menu.lua into your scripts directory, e.g.:
 
-    cp youtube-quality.lua ~/.config/mpv/scripts/
+    cp quality-menu.lua ~/.config/mpv/scripts/
 optional, copy the config file:
 
-    cp youtube-quality.conf ~/.config/mpv/script-opts/
+    cp quality-menu.conf ~/.config/mpv/script-opts/
 set key bindings in input.conf:
 
-    CTRL+f script-message-to youtube_quality video_formats_toggle
-    ALT+f script-message-to youtube_quality audio_formats_toggle
+    CTRL+f script-message-to quality_menu video_formats_toggle
+    ALT+f script-message-to quality_menu audio_formats_toggle
 
 ## OSC extension
-**Completely optional**, an extended version of the OSC is available that includes a button to display the quality menu.  To use this, copy the youtube-quality-osc.lua file into your scripts directory and put `osc=no` in your mpv.conf.
+**Completely optional**, an extended version of the OSC is available that includes a button to display the quality menu.  To use this, copy the quality-menu-osc.lua file into your scripts directory and put `osc=no` in your mpv.conf.
 
 **PLEASE NOTE:** This conflicts with other scripts that modify the OSC, such as TheAMM's excellent [mpv_thumbnail_script](https://github.com/TheAMM/mpv_thumbnail_script).  Merging this OSC modification with that script or others is certainly possible, *but is left as an exercise for the user...*
 

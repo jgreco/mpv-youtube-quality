@@ -1,4 +1,4 @@
--- youtube-quality.lua
+-- quality-menu.lua
 --
 -- Change youtube video quality on the fly.
 --
@@ -77,7 +77,7 @@ local opts = {
     --show the video format menu after opening a file
     start_with_menu = true,
 }
-(require 'mp.options').read_options(opts, "youtube-quality")
+(require 'mp.options').read_options(opts, "quality-menu")
 opts.quality_strings = utils.parse_json(opts.quality_strings)
 
 -- special thanks to reload.lua (https://github.com/4e6/mpv-reload/)

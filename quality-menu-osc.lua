@@ -1275,12 +1275,12 @@ layouts["bottombar"] = function()
     lo.geometry = geo
     lo.style = osc_styles.smallButtonsBar
 
-    ---START youtube-quality
+    ---START quality-menu
     geo = { x = geo.x - geo.w - padX, y = geo.y, an = geo.an, w = geo.w, h = geo.h }
     lo = add_layout("quality-menu")
     lo.geometry = geo
     lo.style = osc_styles.smallButtonsBar
-    --END youtube-quality
+    --END quality-menu
 
     -- Volume
     geo = { x = geo.x - geo.w - padX, y = geo.y, an = geo.an, w = geo.w, h = geo.h }
@@ -1869,14 +1869,14 @@ function osc_init()
         end
     end
 
-    --START youtube-quality
+    --START quality-menu
     ne = new_element("quality-menu", "button")
     ne.content = function()
         return ("≚")
     end
     ne.eventresponder["mbtn_left_up"] =
         function () mp.commandv("script-message", "toggle-quality-menu") end
-    --END youtube-quality
+    --END quality-menu
 
     -- volume
     ne = new_element("volume", "button")
