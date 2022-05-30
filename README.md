@@ -22,7 +22,7 @@ set key bindings in input.conf:
 ## OSC extension
 **Completely optional**, an extended version of the OSC is available that includes a button to display the quality menu.  To use this, copy the quality-menu-osc.lua file into your scripts directory and put `osc=no` in your mpv.conf.
 
-**PLEASE NOTE:** This conflicts with other scripts that modify the OSC, such as TheAMM's excellent [mpv_thumbnail_script](https://github.com/TheAMM/mpv_thumbnail_script).  Merging this OSC modification with that script or others is certainly possible, *but is left as an exercise for the user...*
+**PLEASE NOTE:** This conflicts with other scripts that modify the OSC, such as marzzzello's fork of the excellent [mpv_thumbnail_script](https://github.com/marzzzello/mpv_thumbnail_script).  Merging this OSC modification with that script or others is certainly possible, *but is left as an exercise for the user...*
 
 ## Plans For Future Enhancement
 - [x] Visual indication of what the current quality level is.
