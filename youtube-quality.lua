@@ -102,6 +102,18 @@ local function reload_resume()
     end
 end
 
+local function format_string(vfmt, afmt)
+    if vfmt ~= nil and afmt ~= nil then
+        return vfmt.."+"..afmt
+    elseif vfmt ~= nil then
+        return vfmt
+    elseif afmt ~= nil then
+        return afmt
+    else
+        return ""
+    end
+end
+
 local ytdl = {
     path = opts.ytdl_ver,
     searched = false,
@@ -324,18 +336,6 @@ local function show_menu(isvideo)
     end
 
     options = isvideo and voptions or aoptions
-
-    local function format_string(vfmt, afmt)
-        if vfmt ~= nil and afmt ~= nil then
-            return vfmt.."+"..afmt
-        elseif vfmt ~= nil then
-            return vfmt
-        elseif afmt ~= nil then
-            return afmt
-        else
-            return ""
-        end
-    end
 
     msg.verbose("current ytdl-format: "..format_string(vfmt, afmt))
 
