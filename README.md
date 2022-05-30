@@ -27,14 +27,17 @@ set key bindings in input.conf:
 - [x] Visual indication of what the current quality level is.
 - [x] Option to populate the quality list automatically with the exact formats available for a given video.
 - [x] Optional OSC extension.
-- [ ] Keep data buffer of unchanged format (e.g. after selecting a new audio format, having to reload the already buffered video data is wasteful)
+- [ ] Get formats from when mpv calls youtube-dl (yt-dlp) to get the video, instead of calling youtube-dl (yt-dlp) again.
+- [ ] Keep data buffer of unchanged format (e.g. after selecting a new audio format, having to reload the already buffered video data is wasteful).
 - [ ] *\[your suggestion here\]*
 
 ## Ask for help
-I have no idea how to go about switching out the format for one stream, while retaining the other. Any help on that would be highly appreciated.
+I have no idea how to go about switching out the format for one stream, while retaining the other.
+Any help would be highly appreciated.
+
 
 ## Credit
 - [reload.lua](https://github.com/4e6/mpv-reload/), for the function to reload a video while preserving the playlist.
-- [mpv-playlistmanager](https://github.com/jonniek/mpv-playlistmanager), from which I ripped off much of the menu formatting config.
-- ytdl_hook.lua, from which I ripped off much of the youtube-dl code to fetch the format list
+- [mpv-playlistmanager](https://github.com/jonniek/mpv-playlistmanager), for the menu formatting config.
+- ytdl_hook.lua, much of the  code to fetch the format list with youtube-dl came from there.
 - somebody on /mpv/ for the idea
