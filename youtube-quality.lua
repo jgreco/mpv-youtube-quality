@@ -4,8 +4,8 @@
 --
 -- Usage:
 -- add bindings to input.conf:
--- CTRL+f   script-message-to youtube_quality quality-menu-video
--- ALT+f    script-message-to youtube_quality quality-menu-audio
+-- CTRL+f   script-message-to youtube_quality video_formats_toggle
+-- ALT+f    script-message-to youtube_quality audio_formats_toggle
 --
 -- Displays a menu that lets you switch to different ytdl-format settings while
 -- you're in the middle of a video (just like you were using the web player).
