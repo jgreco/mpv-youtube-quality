@@ -22,7 +22,7 @@ local opts = {
     up_binding = "UP WHEEL_UP",
     down_binding = "DOWN WHEEL_DOWN",
     select_binding = "ENTER MBTN_LEFT",
-    close_menu_binding = "ESC MBTN_RIGHT",
+    close_menu_binding = "ESC MBTN_RIGHT CTRL+f ALT+f",
 
     --youtube-dl version(could be youtube-dl or yt-dlp, or something else)
     ytdl_ver = "yt-dlp",
@@ -358,8 +358,6 @@ local function show_menu(isvideo)
         return s
     end
 
-    num_options = table_size(options)
-
     local function choose_prefix(i)
         if     i == selected and i == active then return opts.selected_and_active
         elseif i == selected then return opts.selected_and_inactive end
@@ -387,6 +385,8 @@ local function show_menu(isvideo)
 		if opts.scale_playlist_by_window then w,h = 0, 0 end
 		mp.set_osd_ass(w, h, ass.text)
     end
+
+    num_options = table_size(options)
 
     local function selected_move(amt)
         selected = selected + amt
