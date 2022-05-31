@@ -1,5 +1,5 @@
 # quality-menu
-A userscript for MPV that allows you to change youtube video quality and audio quality (ytdl-format) on the fly.
+A userscript for MPV that allows you to change the streamed video and audio quality (ytdl-format) on the fly.
 
 ![screenshot](quality-menu-preview-video.jpg)
 
