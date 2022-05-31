@@ -7,29 +7,39 @@ Simply open the video or audio menu, select your prefered format and confirm you
 
 ![screenshot](quality-menu-preview-audio.jpg)
 
-## Installation
-Copy quality-menu.lua into your scripts directory, e.g.:
+## Features
 
-    cp quality-menu.lua ~/.config/mpv/scripts/
-optional, copy the config file:
-
-    cp quality-menu.conf ~/.config/mpv/script-opts/
-set key bindings in input.conf:
-
-    CTRL+f script-message-to quality_menu video_formats_toggle
-    ALT+f script-message-to quality_menu audio_formats_toggle
+- Shows a lot of information about the available formats
+- Formats are sorted based on resolution, fps, bitrate, etc.
+- Currently playing format is marked and selected when opening the menu
+- Indentation makes it easy to see which line you're currently on
+- Remembers selected format for every url in the current session (e.g. going back to previous playlist item automatically selects the prefered format)
+- Controllable entirely by mouse and keyboard (opening and closing the menu by mouse requires the OSC extension)
 
 ## OSC extension
-**Completely optional**, an extended version of the OSC is available that includes a button to display the quality menu.  To use this, copy the quality-menu-osc.lua file into your scripts directory and put `osc=no` in your mpv.conf.
+**(optional)** An extended version of the OSC is available that includes a button to display the quality menu.
 
 ![screenshot](quality-menu-preview-osc.jpg)
 
-**PLEASE NOTE:** This conflicts with other scripts that modify the OSC, such as marzzzello's fork of the excellent [mpv_thumbnail_script](https://github.com/marzzzello/mpv_thumbnail_script).  Merging this OSC modification with that script or others is certainly possible, *but is left as an exercise for the user...*
+**PLEASE NOTE:** This conflicts with other scripts that modify the OSC, such as marzzzello's fork of the excellent [mpv_thumbnail_script](https://github.com/marzzzello/mpv_thumbnail_script).  Merging this OSC modification with that script or others is certainly possible, *but is left as an exercise for the user...* (hint: There are two sections markt with `START quality-menu` and `END quality-menu`)
+
+
+## Installation
+1. Save the `quality-menu.lua` into your [scripts directory](https://mpv.io/manual/stable/#script-location)
+2. Set key bindings in [`input.conf`](https://mpv.io/manual/stable/#input-conf):
+
+    `CTRL+f script-message-to quality_menu video_formats_toggle`
+
+    `ALT+f script-message-to quality_menu audio_formats_toggle`
+
+3. **(optional)** Save the `quality-menu.conf` into your `script-opts` directory (next to the [scripts directory](https://mpv.io/manual/stable/#script-location), create if it doesn't exist)
+4. **(optional)** Save the `quality-menu-osc.lua` into your [scripts directory](https://mpv.io/manual/stable/#script-location)  and put `osc=no` in your [mpv.conf](https://mpv.io/manual/stable/#location-and-syntax)
 
 ## Plans For Future Enhancement
 - [x] Visual indication of what the current quality level is.
 - [x] Option to populate the quality list automatically with the exact formats available for a given video.
 - [x] Optional OSC extension.
+- [ ] Scrolling for long menus
 - [ ] Get formats from when mpv calls youtube-dl (yt-dlp) to get the video, instead of calling youtube-dl (yt-dlp) again.
 - [ ] Keep data buffer of unchanged format (e.g. after selecting a new audio format, having to reload the already buffered video data is wasteful).
 - [ ] *\[your suggestion here\]*
