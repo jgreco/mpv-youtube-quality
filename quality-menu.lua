@@ -1,6 +1,6 @@
 -- quality-menu.lua
 --
--- Change youtube video quality on the fly.
+-- Change the stream video and audio quality on the fly.
 --
 -- Usage:
 -- add bindings to input.conf:
@@ -10,7 +10,7 @@
 -- Displays a menu that lets you switch to different ytdl-format settings while
 -- you're in the middle of a video (just like you were using the web player).
 --
--- Bound to ctrl-f by default.
+-- Bound to ctrl+f and alt+f by default.
 
 local mp = require 'mp'
 local utils = require 'mp.utils'
@@ -70,7 +70,7 @@ local opts = {
     ]
     ]],
 
-    --reset youtube-dl format to the original format string when changing files (e.g. going to the next playlist entry)
+    --reset ytdl-format to the original format string when changing files (e.g. going to the next playlist entry)
     --if file was opened previously, reset to previously selected format
     reset_format = true,
 
