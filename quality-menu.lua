@@ -173,29 +173,30 @@ local function download_formats()
     end
 
     local function exec(args)
-        local ret = utils.subprocess({args = args})
-        return ret.status, ret.stdout, ret
+        local res, err = mp.command_native({name = "subprocess", args = args, capture_stdout = true, capture_stderr = true})
+        return res.status, res.stdout, res.stderr
     end
 
-	local ytdl_format = mp.get_property("ytdl-format")
-	local command = nil
-	if (ytdl_format == nil or ytdl_format == "") then
-		command = {ytdl.path, "--no-warnings", "--no-playlist", "-j", url}
-	else
-		command = {ytdl.path, "--no-warnings", "--no-playlist", "-j", "-f", ytdl_format, url}
-	end
-	
-	msg.verbose("calling youtube-dl with command: " .. table.concat(command, " "))
+    local ytdl_format = mp.get_property("ytdl-format")
+    local command = nil
+    if (ytdl_format == nil or ytdl_format == "") then
+        command = {ytdl.path, "--no-warnings", "--no-playlist", "-j", url}
+    else
+        command = {ytdl.path, "--no-warnings", "--no-playlist", "-j", "-f", ytdl_format, url}
+    end
 
-    local es, json, result = exec(command)
+    msg.verbose("calling youtube-dl with command: " .. table.concat(command, " "))
 
-    if (es < 0) or (json == nil) or (json == "") then
+    local es, stdout, stderr = exec(command)
+
+    if (es < 0) or (stdout == nil) or (stdout == "") then
         mp.osd_message("fetching formats failed...", 1)
         msg.error("failed to get format list: " .. es)
+        msg.error("stderr: " .. stderr)
         return
     end
 
-    local json, err = utils.parse_json(json)
+    local json, err = utils.parse_json(stdout)
 
     if (json == nil) then
         mp.osd_message("fetching formats failed...", 1)
