@@ -33,8 +33,8 @@ local opts = {
     unselected_and_active   = "▷ - ",
     unselected_and_inactive = "○ - ",
 
-	--font size scales by window, if false requires larger font and padding sizes
-	scale_playlist_by_window=true,
+    --font size scales by window, if false requires larger font and padding sizes
+    scale_playlist_by_window=true,
 
     --playlist ass style overrides inside curly brackets, \keyvalue is one field, extra \ for escape in lua
     --example {\\fnUbuntu\\fs10\\b0\\bord1} equals: font=Ubuntu, size=10, bold=no, border=1
@@ -382,9 +382,9 @@ local function show_menu(isvideo)
             ass:append("no formats found")
         end
 
-		local w, h = mp.get_osd_size()
-		if opts.scale_playlist_by_window then w,h = 0, 0 end
-		mp.set_osd_ass(w, h, ass.text)
+        local w, h = mp.get_osd_size()
+        if opts.scale_playlist_by_window then w,h = 0, 0 end
+        mp.set_osd_ass(w, h, ass.text)
     end
 
     num_options = table_size(options)
@@ -457,12 +457,12 @@ local function show_menu(isvideo)
                 afmt = options[selected].format
                 url_data[url].afmt = afmt
             end
-            mp.set_property("ytdl-raw-options", "")		--reset youtube-dl raw options before changing format
+            mp.set_property("ytdl-raw-options", "")    --reset youtube-dl raw options before changing format
             mp.set_property("ytdl-format", format_string(vfmt, afmt))
             reload_resume()
         end)
     end
-    bind_keys(opts.close_menu_binding, "close", destroy)	--close menu using ESC
+    bind_keys(opts.close_menu_binding, "close", destroy)    --close menu using ESC
     draw_menu()
     return
 end
