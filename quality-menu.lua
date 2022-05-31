@@ -49,8 +49,9 @@ local opts = {
     text_padding_x = 5,
     text_padding_y = 5,
 
-    --other
-    menu_timeout = 10,
+    --how many seconds until the quality menu times out
+    --setting this to 0 deactivates the timeout
+    menu_timeout = 6,
 
     --use youtube-dl to fetch a list of available formats (overrides quality_strings)
     fetch_formats = true,
@@ -325,6 +326,7 @@ local function show_menu(isvideo)
     local voptions = nil
     local aoptions = nil
     local url = nil
+    local timeout = nil
 
     if destroyer ~= nil then
         destroyer()
@@ -390,8 +392,10 @@ local function show_menu(isvideo)
         selected = selected + amt
         if selected < 1 then selected = num_options
         elseif selected > num_options then selected = 1 end
-        timeout:kill()
-        timeout:resume()
+        if timeout ~= nil then
+            timeout:kill()
+            timeout:resume()
+        end
         draw_menu()
     end
 
@@ -422,7 +426,9 @@ local function show_menu(isvideo)
     end
     
     local function destroy()
-        timeout:kill()
+        if timeout ~= nil then
+            timeout:kill()
+        end
         mp.set_osd_ass(0,0,"")
         unbind_keys(opts.up_binding, "move_up")
         unbind_keys(opts.down_binding, "move_down")
@@ -430,8 +436,10 @@ local function show_menu(isvideo)
         unbind_keys(opts.close_menu_binding, "close")
         destroyer = nil
     end
-
-    timeout = mp.add_periodic_timer(opts.menu_timeout, destroy)
+    
+    if opts.menu_timeout > 0 then
+        timeout = mp.add_periodic_timer(opts.menu_timeout, destroy)
+    end
     destroyer = destroy
 
     bind_keys(opts.up_binding,     "move_up",   function() selected_move(-1) end, {repeatable=true})
