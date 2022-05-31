@@ -34,7 +34,7 @@ local opts = {
     unselected_and_inactive = "○ - ",
 
 	--font size scales by window, if false requires larger font and padding sizes
-	scale_playlist_by_window=false,
+	scale_playlist_by_window=true,
 
     --playlist ass style overrides inside curly brackets, \keyvalue is one field, extra \ for escape in lua
     --example {\\fnUbuntu\\fs10\\b0\\bord1} equals: font=Ubuntu, size=10, bold=no, border=1
@@ -43,7 +43,7 @@ local opts = {
     --these styles will be used for the whole playlist. More specific styling will need to be hacked in
     --
     --(a monospaced font is recommended but not required)
-    style_ass_tags = "{\\fnmonospace}",
+    style_ass_tags = "{\\fnmonospace\\fs10\\bord1}",
 
     --paddings for top left corner
     text_padding_x = 5,
