@@ -29,11 +29,11 @@ Simply open the video or audio menu, select your prefered format and confirm you
 1. Save the `quality-menu.lua` into your [scripts directory](https://mpv.io/manual/stable/#script-location)
 2. Set key bindings in [`input.conf`](https://mpv.io/manual/stable/#input-conf):
 
-    `CTRL+f script-message-to quality_menu video_formats_toggle`
+    `CTRL+f script-binding quality_menu/video_formats_toggle`
 
-    `ALT+f script-message-to quality_menu audio_formats_toggle`
+    `ALT+f script-binding quality_menu/audio_formats_toggle`
 
-    **(optional)** `CTRL+r script-message-to quality_menu reload`
+    **(optional)** `CTRL+r script-binding quality_menu/reload`
 
 3. **(optional)** Save the `quality-menu.conf` into your `script-opts` directory (next to the [scripts directory](https://mpv.io/manual/stable/#script-location), create if it doesn't exist)
 4. **(optional)** Save the `quality-menu-osc.lua` into your [scripts directory](https://mpv.io/manual/stable/#script-location)  and put `osc=no` in your [mpv.conf](https://mpv.io/manual/stable/#location-and-syntax)

@@ -476,9 +476,9 @@ local function audio_formats_toggle()
 end
 
 -- keybind to launch menu
-mp.register_script_message("video_formats_toggle", video_formats_toggle)
-mp.register_script_message("audio_formats_toggle", audio_formats_toggle)
-mp.register_script_message("reload", reload_resume)
+mp.add_key_binding(nil, "video_formats_toggle", video_formats_toggle)
+mp.add_key_binding(nil, "audio_formats_toggle", audio_formats_toggle)
+mp.add_key_binding(nil, "reload", reload_resume)
 
 local original_format = mp.get_property("ytdl-format")
 local path = nil
