@@ -15,6 +15,7 @@ Simply open the video or audio menu, select your prefered format and confirm you
 - Indentation makes it easy to see which line you're currently on
 - Remembers selected format for every url in the current session (e.g. going back to previous playlist item automatically selects the prefered format)
 - Controllable entirely by mouse and keyboard (opening and closing the menu by mouse requires the OSC extension)
+- Simple reload functionality (for something more sophisticated, go to [reload.lua](https://github.com/4e6/mpv-reload/))
 
 ## OSC extension
 **(optional)** An extended version of the OSC is available that includes a button to display the quality menu.
@@ -31,6 +32,8 @@ Simply open the video or audio menu, select your prefered format and confirm you
     `CTRL+f script-message-to quality_menu video_formats_toggle`
 
     `ALT+f script-message-to quality_menu audio_formats_toggle`
+
+    **(optional)** `CTRL+r script-message-to quality_menu reload`
 
 3. **(optional)** Save the `quality-menu.conf` into your `script-opts` directory (next to the [scripts directory](https://mpv.io/manual/stable/#script-location), create if it doesn't exist)
 4. **(optional)** Save the `quality-menu-osc.lua` into your [scripts directory](https://mpv.io/manual/stable/#script-location)  and put `osc=no` in your [mpv.conf](https://mpv.io/manual/stable/#location-and-syntax)
