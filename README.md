@@ -42,6 +42,7 @@ Simply open the video or audio menu, select your prefered format and confirm you
 - [x] Visual indication of what the current quality level is.
 - [x] Option to populate the quality list automatically with the exact formats available for a given video.
 - [x] Optional OSC extension.
+- [ ] Detect when there is no video output and then deactivate video menu and formats.
 - [ ] Scrolling for long menus
 - [ ] Get formats from when mpv calls youtube-dl (yt-dlp) to get the video, instead of calling youtube-dl (yt-dlp) again.
 - [ ] Keep data buffer of unchanged format (e.g. after selecting a new audio format, having to reload the already buffered video data is wasteful).
