@@ -4,13 +4,11 @@
 --
 -- Usage:
 -- add bindings to input.conf:
--- CTRL+f   script-message-to quality_menu video_formats_toggle
--- ALT+f    script-message-to quality_menu audio_formats_toggle
+-- Ctrl+f   script-message-to quality_menu video_formats_toggle
+-- Alt+f    script-message-to quality_menu audio_formats_toggle
 --
 -- Displays a menu that lets you switch to different ytdl-format settings while
 -- you're in the middle of a video (just like you were using the web player).
---
--- Bound to ctrl+f and alt+f by default.
 
 local mp = require 'mp'
 local utils = require 'mp.utils'
@@ -22,7 +20,7 @@ local opts = {
     up_binding = "UP WHEEL_UP",
     down_binding = "DOWN WHEEL_DOWN",
     select_binding = "ENTER MBTN_LEFT",
-    close_menu_binding = "ESC MBTN_RIGHT CTRL+f ALT+f",
+    close_menu_binding = "ESC MBTN_RIGHT Ctrl+f Alt+f",
 
     --youtube-dl version(could be youtube-dl or yt-dlp, or something else)
     ytdl_ver = "yt-dlp",
