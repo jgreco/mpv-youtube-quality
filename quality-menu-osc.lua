@@ -2619,6 +2619,7 @@ function tick()
             ass:an(8)
             ass:append("Drop files or URLs to play here.")
         end
+        set_osd(640, 360, ass.text)
 
         if state.showhide_enabled then
             mp.disable_key_bindings("showhide")
