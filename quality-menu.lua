@@ -268,7 +268,7 @@ local function download_formats()
             local f = json.formats[i]
             if f.vcodec ~= "none" then
                 local fps = f.fps and f.fps.."fps" or ""
-                local resolution = string.format("%sx%s", f.width, f.height)
+                local resolution = f.resolution or string.format("%sx%s", f.width, f.height)
                 local size = nil
                 if f.filesize == nil and f.filesize_approx then
                     size = "~"..scale_filesize(f.filesize_approx)
