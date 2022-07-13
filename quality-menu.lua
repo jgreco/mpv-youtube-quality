@@ -81,6 +81,9 @@ local opts = {
 
     --sort formats instead of keeping the order from yt-dlp/youtube-dl
     sort_formats = false,
+
+    --hide columns that are identical for all formats
+    hide_identical_columns = true,
 }
 (require 'mp.options').read_options(opts, "quality-menu")
 opts.quality_strings = utils.parse_json(opts.quality_strings)
@@ -138,19 +141,15 @@ local function download_formats()
         return data.voptions, data.aoptions, data.vfmt, data.afmt, url
     end
 
-    local vres = {}
-    local ares = {}
-    local vfmt = nil
-    local afmt = nil
-
     if opts.fetch_formats == false then
+        local vres = {}
         for i,v in ipairs(opts.quality_strings) do
             for k,v2 in pairs(v) do
                 vres[i] = {label = k, format=v2}
             end
         end
-        url_data[url] = {voptions=vres, aoptions=ares, vfmt=nil, afmt=nil}
-        return vres, ares , vfmt, afmt, url
+        url_data[url] = {voptions=vres, aoptions={}, vfmt=nil, afmt=nil}
+        return vres, {}, nil, nil, url
     end
 
     mp.osd_message("fetching available formats with youtube-dl...", 60)
@@ -198,6 +197,10 @@ local function download_formats()
 
     msg.verbose("youtube-dl succeeded!")
 
+    if json.formats == nil then
+        return
+    end
+
     local function string_split (inputstr, sep)
         if sep == nil then
             sep = "%s"
@@ -211,8 +214,59 @@ local function download_formats()
 
     local original_format=json.format_id
     local formats_split = string_split(original_format, "+")
-    vfmt = formats_split[1]
-    afmt = formats_split[2]
+    local vfmt = formats_split[1]
+    local afmt = formats_split[2]
+
+    local video_formats = {}
+    local audio_formats = {}
+    for i = #json.formats, 1, -1 do
+        local format = json.formats[i]
+        local is_video = (format.vcodec and format.vcodec ~= "none") or (format.video_ext and format.video_ext ~= "none")
+        local is_audio = (format.acodec and format.acodec ~= "none") or (format.audio_ext and format.audio_ext ~= "none")
+        if is_video then
+            video_formats[#video_formats+1] = {format=format}
+        elseif is_audio and not is_video then
+            audio_formats[#audio_formats+1] = {format=format}
+        end
+    end
+
+    if opts.sort_formats then
+        table.sort(video_formats,
+        function(a, b)
+            a = a.format
+            b = b.format
+            local size_a = a.filesize or a.filesize_approx
+            local size_b = b.filesize or b.filesize_approx
+            if a.height ~= nil and b.height ~= nil and a.height ~= b.height then
+                return a.height > b.height
+            elseif a.fps ~= nil and b.fps ~= nil and a.fps ~= b.fps then
+                return a.fps > b.fps
+            elseif a.tbr ~= nil and b.tbr ~= nil and a.tbr ~= b.tbr then
+                return a.tbr > b.tbr
+            elseif size_a ~= nil and size_b ~= nil and size_a ~= size_b then
+                return size_a > size_b
+            elseif a.format_id ~= nil and b.format_id ~= nil and a.format_id ~= b.format_id then
+                return a.format_id > b.format_id
+            end
+        end)
+
+        table.sort(audio_formats,
+        function(a, b)
+            a = a.format
+            b = b.format
+            local size_a = a.filesize or a.filesize_approx
+            local size_b = b.filesize or b.filesize_approx
+            if a.asr ~= nil and b.asr ~= nil and a.asr ~= b.asr then
+                return a.asr > b.asr
+            elseif a.tbr ~= nil and b.tbr ~= nil and a.tbr ~= b.tbr then
+                return a.tbr > b.tbr
+            elseif size_a ~= nil and size_b ~= nil and size_a ~= size_b then
+                return size_a > size_b
+            elseif a.format_id ~= nil and b.format_id ~= nil and a.format_id ~= b.format_id then
+                return a.format_id > b.format_id
+            end
+        end)
+    end
 
     local function scale_filesize(size)
         size = tonumber(size)
@@ -251,63 +305,71 @@ local function download_formats()
         end
     end
 
-    if json.formats ~= nil then
-        for i = #json.formats, 1, -1 do
-            local f = json.formats[i]
-            local is_video = (f.vcodec and f.vcodec ~= "none") or (f.video_ext and f.video_ext ~= "none")
-            local is_audio = (f.acodec and f.acodec ~= "none") or (f.audio_ext and f.audio_ext ~= "none")
-            if is_video then
-                local dynamic_range = f.dynamic_range
-                local fps = f.fps and f.fps.."fps" or ""
-                local resolution = f.resolution or string.format("%sx%s", f.width, f.height)
-                local size = nil
-                if f.filesize == nil and f.filesize_approx then
-                    size = "~"..scale_filesize(f.filesize_approx)
-                else
-                    size = scale_filesize(f.filesize)
+    local function video_label_format(format)
+        local dynamic_range = format.dynamic_range
+        local fps = format.fps and format.fps.."fps" or ""
+        local resolution = format.resolution or string.format("%sx%s", format.width, format.height)
+        local size = nil
+        if format.filesize == nil and format.filesize_approx then
+            size = "~"..scale_filesize(format.filesize_approx)
+        else
+            size = scale_filesize(format.filesize)
+        end
+        local tbr = scale_bitrate(format.tbr)
+        local vcodec = format.vcodec == nil and "unknown" or format.vcodec
+        local acodec = format.acodec == nil and "unknown" or format.acodec ~= "none" and format.acodec or ""
+        return {resolution, fps, dynamic_range, tbr, size, format.ext, vcodec, acodec}
+    end
+
+    for i,f in ipairs(video_formats) do
+        video_formats[i].labels = video_label_format(f.format)
+    end
+
+    local function audio_label_format(format)
+        local size = scale_filesize(format.filesize)
+        local tbr = scale_bitrate(format.tbr)
+        return {tostring(format.asr) .. 'Hz', tbr, size, format.ext, format.acodec}
+    end
+
+    for i,f in ipairs(audio_formats) do
+        audio_formats[i].labels = audio_label_format(f.format)
+    end
+
+    local function format_table(formats)
+        local display_col = {}
+        local col_widths = {}
+        local col_val = {}
+        for row=1, #formats do
+            for col=1, #formats[row].labels do
+                col_val[col] = col_val[col] or formats[row].labels[col]
+                local label = formats[row].labels[col]
+                if not col_widths[col] or col_widths[col] < label:len() then
+                    col_widths[col] = label:len()
                 end
-                local tbr = scale_bitrate(f.tbr)
-                local vcodec = f.vcodec == nil and "unknown" or f.vcodec
-                local acodec = f.acodec == nil and " + unknown" or f.acodec ~= "none" and " + "..f.acodec or ""
-                local l = string.format("%-9s %5s %5s %9s %9s (%-4s / %s%s)", resolution, fps, dynamic_range, tbr, size, f.ext, vcodec, acodec)
-                table.insert(vres, {label=l, format=f.format_id, height=f.height, size=f.filesize, fps=f.fps, tbr=f.tbr })
-            elseif is_audio and not is_video then
-                local size = scale_filesize(f.filesize)
-                local tbr = scale_bitrate(f.tbr)
-                local l = string.format("%6sHz %9s %9s (%-4s / %s)", f.asr, tbr, size, f.ext, f.acodec)
-                table.insert(ares, {label=l, format=f.format_id, size=f.filesize, asr=f.asr, tbr=f.tbr })
+                display_col[col] = display_col[col] or (col_val[col] ~= label)
             end
         end
 
-        if opts.sort_formats then
-            table.sort(vres,
-            function(a, b)
-                if a.height ~= nil and b.height ~= nil and a.height ~= b.height then
-                    return a.height > b.height
-                elseif a.fps ~= nil and b.fps ~= nil and a.fps ~= b.fps then
-                    return a.fps > b.fps
-                elseif a.tbr ~= nil and b.tbr ~= nil and a.tbr ~= b.tbr then
-                    return a.tbr > b.tbr
-                elseif a.size ~= nil and b.size ~= nil and a.size ~= b.size then
-                    return a.size > b.size
-                elseif a.format ~= nil and b.format ~= nil and a.format ~= b.format then
-                    return a.format > b.format
-                end
-            end)
-            table.sort(ares,
-            function(a, b)
-                if a.asr ~= nil and b.asr ~= nil and a.asr ~= b.asr then
-                    return a.asr > b.asr
-                elseif a.tbr ~= nil and b.tbr ~= nil and a.tbr ~= b.tbr then
-                    return a.tbr > b.tbr
-                elseif a.size ~= nil and b.size ~= nil and a.size ~= b.size then
-                    return a.size > b.size
-                elseif a.format ~= nil and b.format ~= nil and a.format ~= b.format then
-                    return a.format > b.format
-                end
-            end)
+        local spacing = 2
+        for i=2, #col_widths do
+            col_widths[i] = col_widths[i] + spacing
         end
+
+        local res = {}
+        for _,f in ipairs(formats) do
+            local row = ''
+            for col,label in ipairs(f.labels) do
+                if not opts.hide_identical_columns or display_col[col] then
+                    row = row .. string.format('%' .. col_widths[col] .. 's', label)
+                end
+            end
+            res[#res+1] = {label=row, format=f.format.format_id}
+        end
+        return res
     end
+
+    local vres = format_table(video_formats)
+    local ares = format_table(audio_formats)
 
     mp.osd_message("", 0)
     url_data[url] = {voptions=vres, aoptions=ares, vfmt=vfmt, afmt=afmt}
@@ -333,7 +395,7 @@ local function show_menu(isvideo)
         destroyer()
     end
 
-    local voptions, aoptions , vfmt, afmt, url = download_formats()
+    local voptions, aoptions, vfmt, afmt, url = download_formats()
     if voptions == nil then
         return
     end
@@ -344,7 +406,7 @@ local function show_menu(isvideo)
 
     local active = 0
     local selected = 1
-    --set the cursor to the currently format
+    --set the cursor to the current format
     for i,v in ipairs(options) do
         if v.format == (isvideo and vfmt or afmt) then
             active = i
