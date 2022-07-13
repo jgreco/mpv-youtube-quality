@@ -254,7 +254,9 @@ local function download_formats()
     if json.formats ~= nil then
         for i = #json.formats, 1, -1 do
             local f = json.formats[i]
-            if f.vcodec ~= "none" then
+            local is_video = (f.vcodec and f.vcodec ~= "none") or (f.video_ext and f.video_ext ~= "none")
+            local is_audio = (f.acodec and f.acodec ~= "none") or (f.audio_ext and f.audio_ext ~= "none")
+            if is_video then
                 local dynamic_range = f.dynamic_range
                 local fps = f.fps and f.fps.."fps" or ""
                 local resolution = f.resolution or string.format("%sx%s", f.width, f.height)
@@ -269,7 +271,7 @@ local function download_formats()
                 local acodec = f.acodec == nil and " + unknown" or f.acodec ~= "none" and " + "..f.acodec or ""
                 local l = string.format("%-9s %5s %5s %9s %9s (%-4s / %s%s)", resolution, fps, dynamic_range, tbr, size, f.ext, vcodec, acodec)
                 table.insert(vres, {label=l, format=f.format_id, height=f.height, size=f.filesize, fps=f.fps, tbr=f.tbr })
-            elseif f.acodec ~= "none" then
+            elseif is_audio and not is_video then
                 local size = scale_filesize(f.filesize)
                 local tbr = scale_bitrate(f.tbr)
                 local l = string.format("%6sHz %9s %9s (%-4s / %s)", f.asr, tbr, size, f.ext, f.acodec)
