@@ -326,8 +326,14 @@ local function download_formats()
     end
 
     local function audio_label_format(format)
-        local size = scale_filesize(format.filesize)
+        local size = nil
+        if format.filesize == nil and format.filesize_approx then
+            size = "~"..scale_filesize(format.filesize_approx)
+        else
+            size = scale_filesize(format.filesize)
+        end
         local tbr = scale_bitrate(format.tbr)
+        local acodec = format.acodec == nil and "unknown" or format.acodec
         return {tostring(format.asr) .. 'Hz', tbr, size, format.ext, format.acodec}
     end
 
