@@ -107,25 +107,13 @@ local function reload_resume()
     end
 end
 
-local function format_string(vfmt, afmt)
-    if vfmt ~= nil and afmt ~= nil then
-        return vfmt.."+"..afmt
-    elseif vfmt ~= nil then
-        return vfmt
-    elseif afmt ~= nil then
-        return afmt
-    else
-        return ""
-    end
-end
-
 local ytdl = {
     path = opts.ytdl_ver,
     searched = false,
     blacklisted = {}
 }
 
-url_data={}
+local url_data={}
 local function download_formats()
 
     local function get_url()
@@ -232,7 +220,7 @@ local function download_formats()
             return "unknown"
         end
 
-        counter = 0
+        local counter = 0
         while size > 1024 do
             size = size / 1024
             counter = counter+1
@@ -251,7 +239,7 @@ local function download_formats()
             return "unknown"
         end
 
-        counter = 0
+        local counter = 0
         while br > 1000 do
             br = br / 1000
             counter = counter+1
@@ -323,32 +311,36 @@ local function download_formats()
     return vres, ares , vfmt, afmt, url
 end
 
+local function format_string(vfmt, afmt)
+    if vfmt ~= nil and afmt ~= nil then
+        return vfmt.."+"..afmt
+    elseif vfmt ~= nil then
+        return vfmt
+    elseif afmt ~= nil then
+        return afmt
+    else
+        return ""
+    end
+end
+
 local destroyer = nil
 local function show_menu(isvideo)
-    local selected = 1
-    local active = 0
-    local num_options = 0
-    local options = {}
-    local vfmt = nil
-    local afmt = nil
-    local voptions = nil
-    local aoptions = nil
-    local url = nil
-    local timeout = nil
 
     if destroyer ~= nil then
         destroyer()
     end
 
-    voptions, aoptions , vfmt, afmt, url = download_formats()
+    local voptions, aoptions , vfmt, afmt, url = download_formats()
     if voptions == nil then
         return
     end
 
-    options = isvideo and voptions or aoptions
+    local options = isvideo and voptions or aoptions
 
     msg.verbose("current ytdl-format: "..format_string(vfmt, afmt))
 
+    local active = 0
+    local selected = 1
     --set the cursor to the currently format
     for i,v in ipairs(options) do
         if v.format == (isvideo and vfmt or afmt) then
@@ -359,7 +351,7 @@ local function show_menu(isvideo)
     end
 
     local function table_size(t)
-        s = 0
+        local s = 0
         for i,v in ipairs(t) do
             s = s+1
         end
@@ -394,7 +386,8 @@ local function show_menu(isvideo)
         mp.set_osd_ass(w, h, ass.text)
     end
 
-    num_options = table_size(options)
+    local num_options = table_size(options)
+    local timeout = nil
 
     local function selected_move(amt)
         selected = selected + amt
@@ -419,7 +412,7 @@ local function show_menu(isvideo)
           i = i + 1
         end
     end
-      
+
     local function unbind_keys(keys, name)
         if not keys then
           mp.remove_key_binding(name)
@@ -432,7 +425,7 @@ local function show_menu(isvideo)
           i = i + 1
         end
     end
-    
+
     local function destroy()
         if timeout ~= nil then
             timeout:kill()
@@ -444,7 +437,7 @@ local function show_menu(isvideo)
         unbind_keys(opts.close_menu_binding, "close")
         destroyer = nil
     end
-    
+
     if opts.menu_timeout > 0 then
         timeout = mp.add_periodic_timer(opts.menu_timeout, destroy)
     end
@@ -456,7 +449,7 @@ local function show_menu(isvideo)
         bind_keys(opts.select_binding, "select", function()
             destroy()
             if selected == active then return end
-            
+
             if isvideo == true then
                 vfmt = options[selected].format
                 url_data[url].vfmt = vfmt
@@ -471,7 +464,6 @@ local function show_menu(isvideo)
     end
     bind_keys(opts.close_menu_binding, "close", destroy)    --close menu using ESC
     draw_menu()
-    return
 end
 
 local function video_formats_toggle()
