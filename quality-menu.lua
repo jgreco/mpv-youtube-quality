@@ -255,6 +255,7 @@ local function download_formats()
         for i = #json.formats, 1, -1 do
             local f = json.formats[i]
             if f.vcodec ~= "none" then
+                local dynamic_range = f.dynamic_range
                 local fps = f.fps and f.fps.."fps" or ""
                 local resolution = f.resolution or string.format("%sx%s", f.width, f.height)
                 local size = nil
@@ -266,7 +267,7 @@ local function download_formats()
                 local tbr = scale_bitrate(f.tbr)
                 local vcodec = f.vcodec == nil and "unknown" or f.vcodec
                 local acodec = f.acodec == nil and " + unknown" or f.acodec ~= "none" and " + "..f.acodec or ""
-                local l = string.format("%-9s %-5s %9s %9s (%-4s / %s%s)", resolution, fps, tbr, size, f.ext, vcodec, acodec)
+                local l = string.format("%-9s %5s %5s %9s %9s (%-4s / %s%s)", resolution, fps, dynamic_range, tbr, size, f.ext, vcodec, acodec)
                 table.insert(vres, {label=l, format=f.format_id, height=f.height, size=f.filesize, fps=f.fps, tbr=f.tbr })
             elseif f.acodec ~= "none" then
                 local size = scale_filesize(f.filesize)
