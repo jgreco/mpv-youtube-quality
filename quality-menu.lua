@@ -503,7 +503,7 @@ local function file_start()
     end
     if opts.start_with_menu and new_path ~= path then
         video_formats_toggle()
-    elseif fetch_on_start then
+    elseif opts.fetch_on_start then
         download_formats()
     end
     path = new_path
