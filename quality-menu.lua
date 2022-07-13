@@ -136,7 +136,7 @@ local function download_formats()
         return
     end
 
-    if url_data[url] ~= nil then
+    if url_data[url] then
         local data = url_data[url]
         return data.voptions, data.aoptions, data.vfmt, data.afmt, url
     end
@@ -237,15 +237,15 @@ local function download_formats()
             b = b.format
             local size_a = a.filesize or a.filesize_approx
             local size_b = b.filesize or b.filesize_approx
-            if a.height ~= nil and b.height ~= nil and a.height ~= b.height then
+            if a.height and b.height and a.height ~= b.height then
                 return a.height > b.height
-            elseif a.fps ~= nil and b.fps ~= nil and a.fps ~= b.fps then
+            elseif a.fps and b.fps and a.fps ~= b.fps then
                 return a.fps > b.fps
-            elseif a.tbr ~= nil and b.tbr ~= nil and a.tbr ~= b.tbr then
+            elseif a.tbr and b.tbr and a.tbr ~= b.tbr then
                 return a.tbr > b.tbr
-            elseif size_a ~= nil and size_b ~= nil and size_a ~= size_b then
+            elseif size_a and size_b and size_a ~= size_b then
                 return size_a > size_b
-            elseif a.format_id ~= nil and b.format_id ~= nil and a.format_id ~= b.format_id then
+            elseif a.format_id and b.format_id and a.format_id ~= b.format_id then
                 return a.format_id > b.format_id
             end
         end)
@@ -256,13 +256,13 @@ local function download_formats()
             b = b.format
             local size_a = a.filesize or a.filesize_approx
             local size_b = b.filesize or b.filesize_approx
-            if a.asr ~= nil and b.asr ~= nil and a.asr ~= b.asr then
+            if a.asr and b.asr and a.asr ~= b.asr then
                 return a.asr > b.asr
-            elseif a.tbr ~= nil and b.tbr ~= nil and a.tbr ~= b.tbr then
+            elseif a.tbr and b.tbr and a.tbr ~= b.tbr then
                 return a.tbr > b.tbr
-            elseif size_a ~= nil and size_b ~= nil and size_a ~= size_b then
+            elseif size_a and size_b and size_a ~= size_b then
                 return size_a > size_b
-            elseif a.format_id ~= nil and b.format_id ~= nil and a.format_id ~= b.format_id then
+            elseif a.format_id and b.format_id and a.format_id ~= b.format_id then
                 return a.format_id > b.format_id
             end
         end)
@@ -377,11 +377,11 @@ local function download_formats()
 end
 
 local function format_string(vfmt, afmt)
-    if vfmt ~= nil and afmt ~= nil then
+    if vfmt and afmt then
         return vfmt.."+"..afmt
-    elseif vfmt ~= nil then
+    elseif vfmt then
         return vfmt
-    elseif afmt ~= nil then
+    elseif afmt then
         return afmt
     else
         return ""
@@ -391,7 +391,7 @@ end
 local destroyer = nil
 local function show_menu(isvideo)
 
-    if destroyer ~= nil then
+    if destroyer then
         destroyer()
     end
 
@@ -438,7 +438,7 @@ local function show_menu(isvideo)
         ass:pos(opts.text_padding_x, opts.text_padding_y)
         ass:append(opts.style_ass_tags)
 
-        if options[1] ~= nil then
+        if options[1] then
             for i,v in ipairs(options) do
                 ass:append(choose_prefix(i)..v.label.."\\N")
             end
@@ -458,7 +458,7 @@ local function show_menu(isvideo)
         selected = selected + amt
         if selected < 1 then selected = num_options
         elseif selected > num_options then selected = 1 end
-        if timeout ~= nil then
+        if timeout then
             timeout:kill()
             timeout:resume()
         end
@@ -492,7 +492,7 @@ local function show_menu(isvideo)
     end
 
     local function destroy()
-        if timeout ~= nil then
+        if timeout then
             timeout:kill()
         end
         mp.set_osd_ass(0,0,"")
@@ -510,7 +510,7 @@ local function show_menu(isvideo)
 
     bind_keys(opts.up_binding,     "move_up",   function() selected_move(-1) end, {repeatable=true})
     bind_keys(opts.down_binding,   "move_down", function() selected_move(1)  end, {repeatable=true})
-    if options[1] ~= nil then
+    if options[1] then
         bind_keys(opts.select_binding, "select", function()
             destroy()
             if selected == active then return end
@@ -548,9 +548,9 @@ local original_format = mp.get_property("ytdl-format")
 local path = nil
 local function file_start()
     local new_path = mp.get_property("path")
-    if opts.reset_format and path ~= nil and new_path ~= path then
+    if opts.reset_format and path and new_path ~= path then
         local data = url_data[new_path]
-        if data ~= nil then
+        if data then
             msg.verbose("setting previously set format")
             mp.set_property("ytdl-format", format_string(data.vfmt, data.afmt))
         else
