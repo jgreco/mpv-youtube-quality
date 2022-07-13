@@ -72,12 +72,15 @@ local opts = {
     --reset ytdl-format to the original format string when changing files (e.g. going to the next playlist entry)
     --if file was opened previously, reset to previously selected format
     reset_format = true,
-    
+
     --automatically fetch available formats when opening a file
     fetch_on_start = true,
 
     --show the video format menu after opening a file
     start_with_menu = true,
+
+    --sort formats instead of keeping the order from yt-dlp/youtube-dl
+    sort_formats = false,
 }
 (require 'mp.options').read_options(opts, "quality-menu")
 opts.quality_strings = utils.parse_json(opts.quality_strings)
@@ -261,7 +264,8 @@ local function download_formats()
     end
 
     if json.formats ~= nil then
-        for i,f in ipairs(json.formats) do
+        for i = #json.formats, 1, -1 do
+            local f = json.formats[i]
             if f.vcodec ~= "none" then
                 local fps = f.fps and f.fps.."fps" or ""
                 local resolution = string.format("%sx%s", f.width, f.height)
@@ -275,7 +279,7 @@ local function download_formats()
                 local vcodec = f.vcodec == nil and "unknown" or f.vcodec
                 local acodec = f.acodec == nil and " + unknown" or f.acodec ~= "none" and " + "..f.acodec or ""
                 local l = string.format("%-9s %-5s %9s %9s (%-4s / %s%s)", resolution, fps, tbr, size, f.ext, vcodec, acodec)
-                table.insert(vres, {label=l, format=f.format_id, width=f.width, size=f.filesize, fps=f.fps, tbr=f.tbr })
+                table.insert(vres, {label=l, format=f.format_id, height=f.height, size=f.filesize, fps=f.fps, tbr=f.tbr })
             elseif f.acodec ~= "none" then
                 local size = scale_filesize(f.filesize)
                 local tbr = scale_bitrate(f.tbr)
@@ -284,32 +288,34 @@ local function download_formats()
             end
         end
 
-        table.sort(vres,
-        function(a, b)
-            if a.width ~= nil and b.width ~= nil and a.width ~= b.width then
-                return a.width > b.width
-            elseif a.fps ~= nil and b.fps ~= nil and a.fps ~= b.fps then
-                return a.fps > b.fps
-            elseif a.tbr ~= nil and b.tbr ~= nil and a.tbr ~= b.tbr then
-                return a.tbr > b.tbr
-            elseif a.size ~= nil and b.size ~= nil and a.size ~= b.size then
-                return a.size > b.size
-            elseif a.format ~= nil and b.format ~= nil and a.format ~= b.format then
-                return a.format > b.format
-            end
-        end)
-        table.sort(ares,
-        function(a, b)
-            if a.asr ~= nil and b.asr ~= nil and a.asr ~= b.asr then
-                return a.asr > b.asr
-            elseif a.tbr ~= nil and b.tbr ~= nil and a.tbr ~= b.tbr then
-                return a.tbr > b.tbr
-            elseif a.size ~= nil and b.size ~= nil and a.size ~= b.size then
-                return a.size > b.size
-            elseif a.format ~= nil and b.format ~= nil and a.format ~= b.format then
-                return a.format > b.format
-            end
-        end)
+        if opts.sort_formats then
+            table.sort(vres,
+            function(a, b)
+                if a.height ~= nil and b.height ~= nil and a.height ~= b.height then
+                    return a.height > b.height
+                elseif a.fps ~= nil and b.fps ~= nil and a.fps ~= b.fps then
+                    return a.fps > b.fps
+                elseif a.tbr ~= nil and b.tbr ~= nil and a.tbr ~= b.tbr then
+                    return a.tbr > b.tbr
+                elseif a.size ~= nil and b.size ~= nil and a.size ~= b.size then
+                    return a.size > b.size
+                elseif a.format ~= nil and b.format ~= nil and a.format ~= b.format then
+                    return a.format > b.format
+                end
+            end)
+            table.sort(ares,
+            function(a, b)
+                if a.asr ~= nil and b.asr ~= nil and a.asr ~= b.asr then
+                    return a.asr > b.asr
+                elseif a.tbr ~= nil and b.tbr ~= nil and a.tbr ~= b.tbr then
+                    return a.tbr > b.tbr
+                elseif a.size ~= nil and b.size ~= nil and a.size ~= b.size then
+                    return a.size > b.size
+                elseif a.format ~= nil and b.format ~= nil and a.format ~= b.format then
+                    return a.format > b.format
+                end
+            end)
+        end
     end
 
     mp.osd_message("", 0)
