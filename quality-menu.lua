@@ -189,7 +189,7 @@ local function download_formats()
     local es, stdout, stderr = exec(command)
 
     if (es < 0) or (stdout == nil) or (stdout == "") then
-        mp.osd_message("fetching formats failed...", 1)
+        mp.osd_message("fetching formats failed...", 2)
         msg.error("failed to get format list: " .. es)
         msg.error("stderr: " .. stderr)
         return
@@ -198,7 +198,7 @@ local function download_formats()
     local json, err = utils.parse_json(stdout)
 
     if (json == nil) then
-        mp.osd_message("fetching formats failed...", 1)
+        mp.osd_message("fetching formats failed...", 2)
         msg.error("failed to parse JSON data: " .. err)
         return
     end
@@ -354,9 +354,9 @@ local function download_formats()
                 for col, prop in ipairs(columns) do
                     local label = format.labels[prop]
                     if label == nil then
-                        mp.osd_message('"' .. prop .. '" is not a valid column', 1)
+                        mp.osd_message('"' .. prop .. '" is not a valid column', 5)
                         msg.error('"' .. prop .. '" is not a valid column')
-                        return {}
+                        return nil
                     end
                     col_val[col] = col_val[col] or label
                     if not col_widths[col] or col_widths[col] < label:len() then
@@ -376,6 +376,9 @@ local function download_formats()
         end
 
         local show_columns = hide_columns_calc_width()
+        if show_columns == nil then
+            return nil
+        end
 
         local spacing = 2
         for i=2, #show_columns do
@@ -398,7 +401,6 @@ local function download_formats()
     local vres = format_table(video_formats, columns_video)
     local ares = format_table(audio_formats, columns_audio)
 
-    mp.osd_message("", 0)
     url_data[url] = {voptions=vres, aoptions=ares, vfmt=vfmt, afmt=afmt}
     return vres, ares , vfmt, afmt, url
 end
@@ -423,11 +425,17 @@ local function show_menu(isvideo)
     end
 
     local voptions, aoptions, vfmt, afmt, url = download_formats()
-    if voptions == nil then
-        return
+
+    local options
+    if isvideo then
+        options = voptions
+    else
+        options = aoptions
     end
 
-    local options = isvideo and voptions or aoptions
+    if options == nil then
+        return
+    end
 
     msg.verbose("current ytdl-format: "..format_string(vfmt, afmt))
 
@@ -555,6 +563,7 @@ local function show_menu(isvideo)
         end)
     end
     bind_keys(opts.close_menu_binding, "close", destroy)    --close menu using ESC
+    mp.osd_message("", 0)
     draw_menu()
 end
 
