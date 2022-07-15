@@ -229,8 +229,8 @@ local function download_formats()
     local audio_formats = {}
     for i = #json.formats, 1, -1 do
         local format = json.formats[i]
-        local is_video = (format.vcodec and format.vcodec ~= "none") or (format.video_ext and format.video_ext ~= "none")
-        local is_audio = (format.acodec and format.acodec ~= "none") or (format.audio_ext and format.audio_ext ~= "none")
+        local is_video = not (format.vcodec == "none") and format.resolution and format.resolution ~= "audio only"
+        local is_audio = not (format.acodec == "none") and format.resolution and format.resolution == "audio only"
         if is_video then
             video_formats[#video_formats+1] = {format=format}
         elseif is_audio and not is_video then
@@ -321,14 +321,14 @@ local function download_formats()
             size = scale_filesize(format.filesize)
         end
         return {
-            resolution = format.resolution or string.format("%sx%s", format.width, format.height),
+            resolution = format.resolution or "",
             fps = format.fps and format.fps.."fps" or "",
             dynamic_range = format.dynamic_range or "",
             bitrate_total = scale_bitrate(format.tbr),
             bitrate_video = scale_bitrate(format.vbr),
             bitrate_audio = scale_bitrate(format.abr),
-            codec_video = format.vcodec == nil and "unknown" or format.vcodec == "none" and "" or format.vcodec,
-            codec_audio = format.acodec == nil and "unknown" or format.acodec == "none" and "" or format.acodec,
+            codec_video = format.vcodec == nil and "unknown" or format.vcodec,
+            codec_audio = format.acodec == nil and "unknown" or format.acodec,
             size = size,
             audio_sample_rate = format.asr and tostring(format.asr) .. "Hz" or "",
             ext = format.ext or "",
