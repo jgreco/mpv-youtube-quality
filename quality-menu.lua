@@ -277,10 +277,10 @@ local function download_formats()
     end
 
     local function scale_filesize(size)
-        size = tonumber(size)
         if size == nil then
-            return "unknown"
+            return ""
         end
+        size = tonumber(size)
 
         local counter = 0
         while size > 1024 do
@@ -296,10 +296,10 @@ local function download_formats()
     end
 
     local function scale_bitrate(br)
-        br = tonumber(br)
         if br == nil then
-            return "unknown"
+            return ""
         end
+        br = tonumber(br)
 
         local counter = 0
         while br > 1000 do
