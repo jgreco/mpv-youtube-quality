@@ -330,7 +330,7 @@ local function download_formats()
             codec_video = format.vcodec == nil and "unknown" or format.vcodec == "none" and "" or format.vcodec,
             codec_audio = format.acodec == nil and "unknown" or format.acodec == "none" and "" or format.acodec,
             size = size,
-            audio_sample_rate = tostring(format.asr) .. 'Hz',
+            audio_sample_rate = format.asr and tostring(format.asr) .. "Hz" or "",
             ext = format.ext or "",
             ext_video = format.ext_video or "",
             ext_audio = format.ext_audio or "",
