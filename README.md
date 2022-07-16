@@ -9,8 +9,10 @@ Simply open the video or audio menu, select your prefered format and confirm you
 
 ## Features
 
-- Shows a lot of information about the available formats
-- Formats are sorted based on resolution, fps, bitrate, etc.
+- Columns and their order are configurable
+- All format related information from yt-dlp/youtube-dl can be shown
+- Columns that are identical for all formats are automatically hidden
+- Formats can be sorted based on resolution, fps, bitrate, etc.
 - Currently playing format is marked and selected when opening the menu
 - Indentation makes it easy to see which line you're currently on
 - Remembers selected format for every url in the current session (e.g. going back to previous playlist item automatically selects the prefered format)
@@ -44,7 +46,7 @@ Simply open the video or audio menu, select your prefered format and confirm you
 - [x] Optional OSC extension.
 - [ ] Detect when there is no video output and then deactivate video menu and formats.
 - [ ] Scrolling for long menus
-- [ ] Get formats from when mpv calls youtube-dl (yt-dlp) to get the video, instead of calling youtube-dl (yt-dlp) again.
+- [x] Get formats from when mpv calls yt-dlp/youtube-dl to get the video, instead of calling yt-dlp/youtube-dl  again. (implemented on get_json_from_ytdl_hook branch, requires PR for mpv to be merged)
 - [ ] Keep data buffer of unchanged format (e.g. after selecting a new audio format, having to reload the already buffered video data is wasteful).
 - [ ] *\[your suggestion here\]*
 
