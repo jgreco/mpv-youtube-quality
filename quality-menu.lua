@@ -87,11 +87,25 @@ local opts = {
 
     --which columns are shown in which order
     --comma separated list
-    --available columns are:
-    --resolution, fps, dynamic_range, bitrate_total, bitrate_video, bitrate_audio,
-    --size, ext, ext_video, ext_audio, codec_video, codec_audio, audio_sample_rate
-    columns_video = 'resolution,fps,dynamic_range,bitrate_total,size,codec_video,codec_audio',
-    columns_audio = 'audio_sample_rate,bitrate_total,size,codec_audio',
+    --
+    --columns that might be useful are:
+    --resolution, width, height, fps, dynamic_range, tbr, vbr, abr, asr,
+    --filesize, filesize_approx, vcodec, acodec, ext, video_ext, audio_ext,
+    --language, format, format_note, quality
+    --
+    --columns that are derived from the above, but with special treatment:
+    --frame_rate, bitrate_total, bitrate_video, bitrate_audio,
+    --codec_video, codec_audio, audio_sample_rate
+    --
+    --If those still aren't enough or you're just curious, run:
+    --yt-dlp -j <url>
+    --This outputs unformatted JSON.
+    --Format it and look under "formats" to see what's available.
+    --
+    --Not all videos have all columns available.
+    --Be careful, misspelled columns simply won't be displayed, there is no error.
+    columns_video = 'resolution,frame_rate,dynamic_range,language,bitrate_total,size,codec_video,codec_audio',
+    columns_audio = 'audio_sample_rate,bitrate_total,size,language,codec_audio',
 }
 (require 'mp.options').read_options(opts, "quality-menu")
 opts.quality_strings = utils.parse_json(opts.quality_strings)
@@ -232,17 +246,15 @@ local function download_formats()
         local is_video = not (format.vcodec == "none") and format.resolution and format.resolution ~= "audio only"
         local is_audio = not (format.acodec == "none") and format.resolution and format.resolution == "audio only"
         if is_video then
-            video_formats[#video_formats+1] = {format=format}
+            video_formats[#video_formats+1] = format
         elseif is_audio and not is_video then
-            audio_formats[#audio_formats+1] = {format=format}
+            audio_formats[#audio_formats+1] = format
         end
     end
 
     if opts.sort_formats then
         table.sort(video_formats,
         function(a, b)
-            a = a.format
-            b = b.format
             local size_a = a.filesize or a.filesize_approx
             local size_b = b.filesize or b.filesize_approx
             if a.height and b.height and a.height ~= b.height then
@@ -260,8 +272,6 @@ local function download_formats()
 
         table.sort(audio_formats,
         function(a, b)
-            a = a.format
-            b = b.format
             local size_a = a.filesize or a.filesize_approx
             local size_b = b.filesize or b.filesize_approx
             if a.asr and b.asr and a.asr ~= b.asr then
@@ -313,61 +323,51 @@ local function download_formats()
         end
     end
 
-    local function format_label(format)
-        local size = nil
+    local function populate_special_fields(format)
         if format.filesize == nil and format.filesize_approx then
-            size = "~"..scale_filesize(format.filesize_approx)
+            format.size = "~"..scale_filesize(format.filesize_approx)
         else
-            size = scale_filesize(format.filesize)
+            format.size = scale_filesize(format.filesize)
         end
-        return {
-            resolution = format.resolution or "",
-            fps = format.fps and format.fps.."fps" or "",
-            dynamic_range = format.dynamic_range or "",
-            bitrate_total = scale_bitrate(format.tbr),
-            bitrate_video = scale_bitrate(format.vbr),
-            bitrate_audio = scale_bitrate(format.abr),
-            codec_video = format.vcodec == nil and "unknown" or format.vcodec,
-            codec_audio = format.acodec == nil and "unknown" or format.acodec,
-            size = size,
-            audio_sample_rate = format.asr and tostring(format.asr) .. "Hz" or "",
-            ext = format.ext or "",
-            ext_video = format.ext_video or "",
-            ext_audio = format.ext_audio or "",
-        }
+
+        format.frame_rate = format.fps and format.fps.."fps" or ""
+        format.bitrate_total = scale_bitrate(format.tbr)
+        format.bitrate_video = scale_bitrate(format.vbr)
+        format.bitrate_audio = scale_bitrate(format.abr)
+        format.codec_video = format.vcodec == nil and "unknown" or format.vcodec == "none" and "" or format.vcodec
+        format.codec_audio = format.acodec == nil and "unknown" or format.acodec == "none" and "" or format.acodec
+        format.audio_sample_rate = format.asr and tostring(format.asr) .. "Hz" or ""
     end
 
-    for i,f in ipairs(video_formats) do
-        video_formats[i].labels = format_label(f.format)
+    for _,format in ipairs(video_formats) do
+        populate_special_fields(format)
     end
 
-    for i,f in ipairs(audio_formats) do
-        audio_formats[i].labels = format_label(f.format)
+    for _,format in ipairs(audio_formats) do
+        populate_special_fields(format)
     end
 
     local function format_table(formats, columns)
-        local function hide_columns_calc_width()
+        local function calc_shown_columns()
             local display_col = {}
-            local col_widths = {}
-            local col_val = {}
+            local column_widths = {}
+            local column_values = {}
             for _,format in pairs(formats) do
                 for col, prop in ipairs(columns) do
-                    local label = format.labels[prop]
-                    if label == nil then
-                        mp.osd_message('"' .. prop .. '" is not a valid column', 5)
-                        msg.error('"' .. prop .. '" is not a valid column')
-                        return nil
+                    local label = tostring(format[prop] or "")
+                    format[prop] = label
+
+                    if not column_widths[col] or column_widths[col] < label:len() then
+                        column_widths[col] = label:len()
                     end
-                    col_val[col] = col_val[col] or label
-                    if not col_widths[col] or col_widths[col] < label:len() then
-                        col_widths[col] = label:len()
-                    end
-                    display_col[col] = display_col[col] or (col_val[col] ~= label)
+
+                    column_values[col] = column_values[col] or label
+                    display_col[col] = display_col[col] or (column_values[col] ~= label)
                 end
             end
 
             local show_columns={}
-            for i, width in ipairs(col_widths) do
+            for i, width in ipairs(column_widths) do
                 if width > 0 and not opts.hide_identical_columns or display_col[i] then
                     show_columns[#show_columns+1] = {prop=columns[i],width=width}
                 end
@@ -375,23 +375,21 @@ local function download_formats()
             return show_columns
         end
 
-        local show_columns = hide_columns_calc_width()
-        if show_columns == nil then
-            return nil
-        end
+        local show_columns = calc_shown_columns()
 
         local spacing = 2
         for i=2, #show_columns do
-            show_columns[i].width = show_columns[i].width + spacing
+            -- lua errors out with width > 99 ("invalid conversion specification")
+            show_columns[i].width = math.min(show_columns[i].width + spacing, 99)
         end
 
         local res = {}
         for _,f in ipairs(formats) do
             local row = ''
             for _,column in ipairs(show_columns) do
-                row = row .. string.format('%' .. column.width .. 's', f.labels[column.prop])
+                row = row .. string.format('%' .. column.width .. 's', f[column.prop] or "")
             end
-            res[#res+1] = {label=row, format=f.format.format_id}
+            res[#res+1] = {label=row, format=f.format_id}
         end
         return res
     end
