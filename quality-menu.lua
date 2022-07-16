@@ -86,7 +86,7 @@ local opts = {
     hide_identical_columns = true,
 
     --which columns are shown in which order
-    --comma separated list
+    --comma separated list, prefix column with "-" to align left
     --
     --columns that might be useful are:
     --resolution, width, height, fps, dynamic_range, tbr, vbr, abr, asr,
@@ -104,7 +104,7 @@ local opts = {
     --
     --Not all videos have all columns available.
     --Be careful, misspelled columns simply won't be displayed, there is no error.
-    columns_video = 'resolution,frame_rate,dynamic_range,language,bitrate_total,size,codec_video,codec_audio',
+    columns_video = '-resolution,frame_rate,dynamic_range,language,bitrate_total,size,codec_video,codec_audio',
     columns_audio = 'audio_sample_rate,bitrate_total,size,language,codec_audio',
 }
 (require 'mp.options').read_options(opts, "quality-menu")
@@ -352,6 +352,15 @@ local function download_formats()
             local display_col = {}
             local column_widths = {}
             local column_values = {}
+            local column_align_left = {}
+
+            for i, prop in ipairs(columns) do
+                if string.sub(prop, 1, 1) == "-" then
+                    columns[i] = string.sub(prop, 2)
+                    column_align_left[i] = true
+                end
+            end
+
             for _,format in pairs(formats) do
                 for col, prop in ipairs(columns) do
                     local label = tostring(format[prop] or "")
@@ -369,7 +378,11 @@ local function download_formats()
             local show_columns={}
             for i, width in ipairs(column_widths) do
                 if width > 0 and not opts.hide_identical_columns or display_col[i] then
-                    show_columns[#show_columns+1] = {prop=columns[i],width=width}
+                    show_columns[#show_columns+1] = {
+                        prop=columns[i],
+                        width=width,
+                        align_left=column_align_left[i]
+                    }
                 end
             end
             return show_columns
@@ -387,7 +400,8 @@ local function download_formats()
         for _,f in ipairs(formats) do
             local row = ''
             for _,column in ipairs(show_columns) do
-                row = row .. string.format('%' .. column.width .. 's', f[column.prop] or "")
+                local width = column.width * (column.align_left and -1 or 1)
+                row = row .. string.format('%' .. width .. 's', f[column.prop] or "")
             end
             res[#res+1] = {label=row, format=f.format_id}
         end
