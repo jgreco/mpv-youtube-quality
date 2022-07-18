@@ -243,8 +243,10 @@ local function download_formats()
     local audio_formats = {}
     for i = #json.formats, 1, -1 do
         local format = json.formats[i]
-        local is_video = not (format.vcodec == "none") and format.resolution and format.resolution ~= "audio only"
-        local is_audio = not (format.acodec == "none") and format.resolution and format.resolution == "audio only"
+        -- "none" means it is not a video
+        -- nil means it is unknown
+        local is_video = format.vcodec ~= "none"
+        local is_audio = format.acodec ~= "none"
         if is_video then
             video_formats[#video_formats+1] = format
         elseif is_audio and not is_video then
