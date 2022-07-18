@@ -79,9 +79,6 @@ local opts = {
     --show the video format menu after opening a file
     start_with_menu = true,
 
-    --sort formats instead of keeping the order from yt-dlp/youtube-dl
-    sort_formats = false,
-
     --hide columns that are identical for all formats
     hide_identical_columns = true,
 
@@ -106,6 +103,14 @@ local opts = {
     --Be careful, misspelled columns simply won't be displayed, there is no error.
     columns_video = '-resolution,frame_rate,dynamic_range,language,bitrate_total,size,codec_video,codec_audio',
     columns_audio = 'audio_sample_rate,bitrate_total,size,language,codec_audio',
+
+    --columns used for sorting, see "columns_video" for available columns
+    --comma separated list
+    --Leaving this empty keeps the order from yt-dlp/youtube-dl.
+    --Be careful, misspelled columns won't result in an error,
+    --but they might influence the result.
+    sort_video = 'height,fps,tbr,size,format_id',
+    sort_audio = 'asr,tbr,size,format_id',
 }
 (require 'mp.options').read_options(opts, "quality-menu")
 opts.quality_strings = utils.parse_json(opts.quality_strings)
@@ -241,6 +246,7 @@ local function download_formats()
 
     local video_formats = {}
     local audio_formats = {}
+    local all_formats = {}
     for i = #json.formats, 1, -1 do
         local format = json.formats[i]
         -- "none" means it is not a video
@@ -249,43 +255,48 @@ local function download_formats()
         local is_audio = format.acodec ~= "none"
         if is_video then
             video_formats[#video_formats+1] = format
+            all_formats[#all_formats+1] = format
         elseif is_audio and not is_video then
             audio_formats[#audio_formats+1] = format
+            all_formats[#all_formats+1] = format
         end
     end
 
-    if opts.sort_formats then
-        table.sort(video_formats,
-        function(a, b)
-            local size_a = a.filesize or a.filesize_approx
-            local size_b = b.filesize or b.filesize_approx
-            if a.height and b.height and a.height ~= b.height then
-                return a.height > b.height
-            elseif a.fps and b.fps and a.fps ~= b.fps then
-                return a.fps > b.fps
-            elseif a.tbr and b.tbr and a.tbr ~= b.tbr then
-                return a.tbr > b.tbr
-            elseif size_a and size_b and size_a ~= size_b then
-                return size_a > size_b
-            elseif a.format_id and b.format_id and a.format_id ~= b.format_id then
-                return a.format_id > b.format_id
-            end
-        end)
+    local function populate_special_fields(format)
+        format.size = format.filesize or format.filesize_approx
+        format.frame_rate = format.fps
+        format.bitrate_total = format.tbr
+        format.bitrate_video = format.vbr
+        format.bitrate_audio = format.abr
+        format.codec_video = format.vcodec
+        format.codec_audio = format.acodec
+        format.audio_sample_rate = format.asr
+    end
 
-        table.sort(audio_formats,
-        function(a, b)
-            local size_a = a.filesize or a.filesize_approx
-            local size_b = b.filesize or b.filesize_approx
-            if a.asr and b.asr and a.asr ~= b.asr then
-                return a.asr > b.asr
-            elseif a.tbr and b.tbr and a.tbr ~= b.tbr then
-                return a.tbr > b.tbr
-            elseif size_a and size_b and size_a ~= size_b then
-                return size_a > size_b
-            elseif a.format_id and b.format_id and a.format_id ~= b.format_id then
-                return a.format_id > b.format_id
+    for _,format in ipairs(all_formats) do
+        populate_special_fields(format)
+    end
+
+    local function comp(properties)
+        return function (a, b)
+            for _,prop in ipairs(properties) do
+                local a_val = a[prop]
+                local b_val = b[prop]
+                if a_val and b_val and type(a_val) ~= 'table' and a_val ~= b_val then
+                    return a_val > b_val
+                end
             end
-        end)
+            return false
+        end
+    end
+
+    local sort_video = string_split(opts.sort_video, ',')
+    local sort_audio = string_split(opts.sort_audio, ',')
+    if #sort_video > 0 then
+        table.sort(video_formats, comp(sort_video))
+    end
+    if #sort_audio > 0 then
+        table.sort(audio_formats, comp(sort_audio))
     end
 
     local function scale_filesize(size)
@@ -325,13 +336,9 @@ local function download_formats()
         end
     end
 
-    local function populate_special_fields(format)
-        if format.filesize == nil and format.filesize_approx then
-            format.size = "~"..scale_filesize(format.filesize_approx)
-        else
-            format.size = scale_filesize(format.filesize)
-        end
-
+    local function format_special_fields(format)
+        local size_prefix = not format.filesize and format.filesize_approx and "~" or ""
+        format.size = (size_prefix) .. scale_filesize(format.size)
         format.frame_rate = format.fps and format.fps.."fps" or ""
         format.bitrate_total = scale_bitrate(format.tbr)
         format.bitrate_video = scale_bitrate(format.vbr)
@@ -341,12 +348,8 @@ local function download_formats()
         format.audio_sample_rate = format.asr and tostring(format.asr) .. "Hz" or ""
     end
 
-    for _,format in ipairs(video_formats) do
-        populate_special_fields(format)
-    end
-
-    for _,format in ipairs(audio_formats) do
-        populate_special_fields(format)
+    for _,format in ipairs(all_formats) do
+        format_special_fields(format)
     end
 
     local function format_table(formats, columns)
