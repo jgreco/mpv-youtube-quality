@@ -105,7 +105,7 @@ local opts = {
     columns_audio = 'audio_sample_rate,bitrate_total,size,language,codec_audio',
 
     --columns used for sorting, see "columns_video" for available columns
-    --comma separated list
+    --comma separated list, prefix column with "-" to reverse sorting order
     --Leaving this empty keeps the order from yt-dlp/youtube-dl.
     --Be careful, misspelled columns won't result in an error,
     --but they might influence the result.
@@ -277,26 +277,44 @@ local function download_formats()
         populate_special_fields(format)
     end
 
-    local function comp(properties)
+    local function strip_minus(list)
+        local stripped_list = {}
+        local had_minus = {}
+        for i, val in ipairs(list) do
+            if string.sub(val, 1, 1) == "-" then
+                val = string.sub(val, 2)
+                had_minus[val] = true
+            end
+            stripped_list[i] = val
+        end
+        return stripped_list, had_minus
+    end
+
+    local sort_video, reverse_video = strip_minus(string_split(opts.sort_video, ','))
+    local sort_audio, reverse_audio = strip_minus(string_split(opts.sort_audio, ','))
+
+    local function comp(properties, reverse)
         return function (a, b)
             for _,prop in ipairs(properties) do
                 local a_val = a[prop]
                 local b_val = b[prop]
                 if a_val and b_val and type(a_val) ~= 'table' and a_val ~= b_val then
-                    return a_val > b_val
+                    if reverse[prop] then
+                        return a_val < b_val
+                    else
+                        return a_val > b_val
+                    end
                 end
             end
             return false
         end
     end
 
-    local sort_video = string_split(opts.sort_video, ',')
-    local sort_audio = string_split(opts.sort_audio, ',')
     if #sort_video > 0 then
-        table.sort(video_formats, comp(sort_video))
+        table.sort(video_formats, comp(sort_video, reverse_video))
     end
     if #sort_audio > 0 then
-        table.sort(audio_formats, comp(sort_audio))
+        table.sort(audio_formats, comp(sort_audio, reverse_audio))
     end
 
     local function scale_filesize(size)
@@ -357,14 +375,7 @@ local function download_formats()
             local display_col = {}
             local column_widths = {}
             local column_values = {}
-            local column_align_left = {}
-
-            for i, prop in ipairs(columns) do
-                if string.sub(prop, 1, 1) == "-" then
-                    columns[i] = string.sub(prop, 2)
-                    column_align_left[i] = true
-                end
-            end
+            local columns, column_align_left = strip_minus(columns)
 
             for _,format in pairs(formats) do
                 for col, prop in ipairs(columns) do
@@ -383,10 +394,11 @@ local function download_formats()
             local show_columns={}
             for i, width in ipairs(column_widths) do
                 if width > 0 and not opts.hide_identical_columns or display_col[i] then
+                    local prop = columns[i]
                     show_columns[#show_columns+1] = {
-                        prop=columns[i],
+                        prop=prop,
                         width=width,
-                        align_left=column_align_left[i]
+                        align_left=column_align_left[prop]
                     }
                 end
             end
