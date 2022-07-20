@@ -439,6 +439,12 @@ local function get_url()
     return is_url(path) and path or nil
 end
 
+local function send_formats_to(type, url, script_name, options, format_id)
+    mp.commandv('script-message-to', script_name, type .. '_formats', url, utils.format_json(options), format_id)
+end
+
+local queue_callback_video = {}
+local queue_callback_audio = {}
 local function get_formats()
 
     local url = get_url()
@@ -463,6 +469,16 @@ local function get_formats()
     end
 
     local vres, ares , vfmt, afmt = download_formats(url)
+
+    for _, script_name in ipairs(queue_callback_video[url] or {}) do
+        send_formats_to('video', url, script_name, vres, vfmt)
+    end
+    for _, script_name in ipairs(queue_callback_audio[url] or {}) do
+        send_formats_to('audio', url, script_name, ares, afmt)
+    end
+
+    queue_callback_video[url] = nil
+    queue_callback_audio[url] = nil
     return vres, ares , vfmt, afmt, url
 end
 
@@ -475,6 +491,17 @@ local function format_string(vfmt, afmt)
         return afmt
     else
         return ""
+    end
+end
+
+local function set_format(url, vfmt, afmt)
+    if (url_data[url].vfmt ~= vfmt or url_data[url].afmt ~= afmt) then
+        url_data[url].afmt = afmt
+        url_data[url].vfmt = vfmt
+        if url == mp.get_property("path") then
+            mp.set_property("ytdl-format", format_string(vfmt, afmt))
+            reload_resume()
+        end
     end
 end
 
@@ -621,15 +648,12 @@ local function show_menu(isvideo)
             if selected == active then return end
 
             fmt = options[selected] and options[selected].format or nil
-            if isvideo == true then
+            if isvideo then
                 vfmt = fmt
-                url_data[url].vfmt = vfmt
             else
                 afmt = fmt
-                url_data[url].afmt = afmt
             end
-            mp.set_property("ytdl-format", format_string(vfmt, afmt))
-            reload_resume()
+            set_format(url, vfmt, afmt)
         end)
     end
     bind_keys(opts.close_menu_binding, "close", destroy)    --close menu using ESC
@@ -637,12 +661,26 @@ local function show_menu(isvideo)
     draw_menu()
 end
 
+local ui_callback = {}
+
 local function video_formats_toggle()
-    show_menu(true)
+    if #ui_callback > 0 then
+        for _, name in ipairs(ui_callback) do
+            mp.commandv('script-message-to', name, 'video-formats-menu')
+        end
+    else
+        show_menu(true)
+    end
 end
 
 local function audio_formats_toggle()
-    show_menu(false)
+    if #ui_callback > 0 then
+        for _, name in ipairs(ui_callback) do
+            mp.commandv('script-message-to', name, 'audio-formats-menu')
+        end
+    else
+        show_menu(false)
+    end
 end
 
 -- keybind to launch menu
@@ -675,3 +713,39 @@ local function file_start()
     path = new_path
 end
 mp.register_event("start-file", file_start)
+
+mp.register_script_message('video-formats-get', function(url, script_name)
+    local data = url_data[url]
+    if data then
+        send_formats_to('video', url, script_name, data.voptions, data.vfmt)
+    else
+        local queue = queue_callback_video[url] or {}
+        queue[#queue + 1] = script_name
+        queue_callback_video[url] = queue
+        get_formats()
+    end
+end)
+
+mp.register_script_message('audio-formats-get', function(url, script_name)
+    local data = url_data[url]
+    if data then
+        send_formats_to('audio', url, script_name, data.aoptions, data.afmt)
+    else
+        local queue = queue_callback_audio[url] or {}
+        queue[#queue + 1] = script_name
+        queue_callback_audio[url] = queue
+        get_formats()
+    end
+end)
+
+mp.register_script_message('video-format-set', function(url, format_id)
+    set_format(url, format_id, url_data[url].afmt)
+end)
+
+mp.register_script_message('audio-format-set', function(url, format_id)
+    set_format(url, url_data[url].vfmt, format_id)
+end)
+
+mp.register_script_message('register-ui', function(script_name)
+    ui_callback[#ui_callback + 1] = script_name
+end)
