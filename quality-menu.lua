@@ -79,6 +79,13 @@ local opts = {
     --show the video format menu after opening a file
     start_with_menu = true,
 
+    --include unknown formats in the list
+    --Unfortunately choosing which formats are video or audio is not always perfect.
+    --Set to true to make sure you don't miss any formats, but then the list
+    --might also include formats that aren't actually video or audio.
+    --Formats that are known to not be video or audio are still filtered out.
+    include_unknown = false,
+
     --hide columns that are identical for all formats
     hide_identical_columns = true,
 
@@ -251,8 +258,8 @@ local function download_formats()
         local format = json.formats[i]
         -- "none" means it is not a video
         -- nil means it is unknown
-        local is_video = format.vcodec ~= "none"
-        local is_audio = format.acodec ~= "none"
+        local is_video = (opts.include_unknown or format.vcodec) and format.vcodec ~= "none"
+        local is_audio = (opts.include_unknown or format.acodec) and format.acodec ~= "none"
         if is_video then
             video_formats[#video_formats+1] = format
             all_formats[#all_formats+1] = format
