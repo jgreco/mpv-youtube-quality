@@ -415,17 +415,14 @@ local function download_formats()
         local show_columns = calc_shown_columns()
 
         local spacing = 2
-        for i=2, #show_columns do
-            -- lua errors out with width > 99 ("invalid conversion specification")
-            show_columns[i].width = math.min(show_columns[i].width + spacing, 99)
-        end
-
         local res = {}
         for _,f in ipairs(formats) do
             local row = ''
-            for _,column in ipairs(show_columns) do
-                local width = column.width * (column.align_left and -1 or 1)
-                row = row .. string.format('%' .. width .. 's', f[column.prop] or "")
+            for i,column in ipairs(show_columns) do
+                -- lua errors out with width > 99 ("invalid conversion specification")
+                local width = math.min(column.width * (column.align_left and -1 or 1), 99)
+                row = row .. (i > 1 and string.format('%' .. spacing .. 's', '') or '')
+                      .. string.format('%' .. width .. 's', f[column.prop] or "")
             end
             res[#res+1] = {label=row, format=f.format_id}
         end
