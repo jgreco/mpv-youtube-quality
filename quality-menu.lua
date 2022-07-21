@@ -150,91 +150,7 @@ local ytdl = {
     blacklisted = {}
 }
 
-local url_data={}
-local function download_formats()
-
-    local function get_url()
-        local path = mp.get_property("path")
-        path = string.gsub(path, "ytdl://", "") -- Strip possible ytdl:// prefix.
-
-        local function is_url(s)
-            -- adapted the regex from https://stackoverflow.com/questions/3809401/what-is-a-good-regular-expression-to-match-a-url
-            return nil ~= string.match(path, "^[%w]-://[-a-zA-Z0-9@:%._\\+~#=]+%.[a-zA-Z0-9()][a-zA-Z0-9()]?[a-zA-Z0-9()]?[a-zA-Z0-9()]?[a-zA-Z0-9()]?[a-zA-Z0-9()]?[-a-zA-Z0-9()@:%_\\+.~#?&/=]*")
-        end
-
-        return is_url(path) and path or nil
-    end
-
-    local url = get_url()
-    if url == nil then
-        return
-    end
-
-    if url_data[url] then
-        local data = url_data[url]
-        return data.voptions, data.aoptions, data.vfmt, data.afmt, url
-    end
-
-    if opts.fetch_formats == false then
-        local vres = {}
-        for i,v in ipairs(opts.quality_strings) do
-            for k,v2 in pairs(v) do
-                vres[i] = {label = k, format=v2}
-            end
-        end
-        url_data[url] = {voptions=vres, aoptions={}, vfmt=nil, afmt=nil}
-        return vres, {}, nil, nil, url
-    end
-
-    mp.osd_message("fetching available formats with youtube-dl...", 60)
-
-    if not (ytdl.searched) then
-        local ytdl_mcd = mp.find_config_file(opts.ytdl_ver)
-        if not (ytdl_mcd == nil) then
-            msg.verbose("found youtube-dl at: " .. ytdl_mcd)
-            ytdl.path = ytdl_mcd
-        end
-        ytdl.searched = true
-    end
-
-    local function exec(args)
-        local res, err = mp.command_native({name = "subprocess", args = args, capture_stdout = true, capture_stderr = true})
-        return res.status, res.stdout, res.stderr
-    end
-
-    local ytdl_format = mp.get_property("ytdl-format")
-    local command = nil
-    if (ytdl_format == nil or ytdl_format == "") then
-        command = {ytdl.path, "--no-warnings", "--no-playlist", "-j", url}
-    else
-        command = {ytdl.path, "--no-warnings", "--no-playlist", "-j", "-f", ytdl_format, url}
-    end
-
-    msg.verbose("calling youtube-dl with command: " .. table.concat(command, " "))
-
-    local es, stdout, stderr = exec(command)
-
-    if (es < 0) or (stdout == nil) or (stdout == "") then
-        mp.osd_message("fetching formats failed...", 2)
-        msg.error("failed to get format list: " .. es)
-        msg.error("stderr: " .. stderr)
-        return
-    end
-
-    local json, err = utils.parse_json(stdout)
-
-    if (json == nil) then
-        mp.osd_message("fetching formats failed...", 2)
-        msg.error("failed to parse JSON data: " .. err)
-        return
-    end
-
-    msg.verbose("youtube-dl succeeded!")
-
-    if json.formats == nil then
-        return
-    end
-
+local function process_json(json)
     local function string_split (inputstr, sep)
         if sep == nil then
             sep = "%s"
@@ -433,8 +349,108 @@ local function download_formats()
     local columns_audio = string_split(opts.columns_audio, ',')
     local vres = format_table(video_formats, columns_video)
     local ares = format_table(audio_formats, columns_audio)
+    return vres, ares , vfmt, afmt
+end
 
+local url_data={}
+local function process_json_string(url, json)
+    local json, err = utils.parse_json(json)
+
+    if (json == nil) then
+        mp.osd_message("fetching formats failed...", 2)
+        msg.error("failed to parse JSON data: " .. err)
+        return
+    end
+
+    if json.formats == nil then
+        return
+    end
+
+    local vres, ares , vfmt, afmt = process_json(json)
     url_data[url] = {voptions=vres, aoptions=ares, vfmt=vfmt, afmt=afmt}
+    return vres, ares , vfmt, afmt
+end
+
+local function download_formats(url)
+
+    mp.osd_message("fetching available formats with youtube-dl...", 60)
+
+    if not (ytdl.searched) then
+        local ytdl_mcd = mp.find_config_file(opts.ytdl_ver)
+        if not (ytdl_mcd == nil) then
+            msg.verbose("found youtube-dl at: " .. ytdl_mcd)
+            ytdl.path = ytdl_mcd
+        end
+        ytdl.searched = true
+    end
+
+    local function exec(args)
+        local res, err = mp.command_native({name = "subprocess", args = args, capture_stdout = true, capture_stderr = true})
+        return res.status, res.stdout, res.stderr
+    end
+
+    local ytdl_format = mp.get_property("ytdl-format")
+    local command = nil
+    if (ytdl_format == nil or ytdl_format == "") then
+        command = {ytdl.path, "--no-warnings", "--no-playlist", "-j", url}
+    else
+        command = {ytdl.path, "--no-warnings", "--no-playlist", "-j", "-f", ytdl_format, url}
+    end
+
+    msg.verbose("calling youtube-dl with command: " .. table.concat(command, " "))
+
+    local es, stdout, stderr = exec(command)
+
+    if (es < 0) or (stdout == nil) or (stdout == "") then
+        mp.osd_message("fetching formats failed...", 2)
+        msg.error("failed to get format list: " .. es)
+        msg.error("stderr: " .. stderr)
+        return
+    end
+
+    msg.verbose("youtube-dl succeeded!")
+    mp.osd_message("", 0)
+
+    local vres, ares , vfmt, afmt = process_json_string(url, stdout)
+    return vres, ares , vfmt, afmt
+end
+
+local function get_url()
+    local path = mp.get_property("path")
+    path = string.gsub(path, "ytdl://", "") -- Strip possible ytdl:// prefix.
+
+    local function is_url(s)
+        -- adapted the regex from https://stackoverflow.com/questions/3809401/what-is-a-good-regular-expression-to-match-a-url
+        return nil ~= string.match(path, "^[%w]-://[-a-zA-Z0-9@:%._\\+~#=]+%.[a-zA-Z0-9()][a-zA-Z0-9()]?[a-zA-Z0-9()]?[a-zA-Z0-9()]?[a-zA-Z0-9()]?[a-zA-Z0-9()]?[-a-zA-Z0-9()@:%_\\+.~#?&/=]*")
+    end
+
+    return is_url(path) and path or nil
+end
+
+local function get_formats()
+
+    local url = get_url()
+    if url == nil then
+        return
+    end
+
+    if url_data[url] then
+        local data = url_data[url]
+        return data.voptions, data.aoptions, data.vfmt, data.afmt, url
+    end
+
+    if opts.fetch_formats == false then
+        local vres = {}
+        for i,v in ipairs(opts.quality_strings) do
+            for k,v2 in pairs(v) do
+                vres[i] = {label = k, format=v2}
+            end
+        end
+        url_data[url] = {voptions=vres, aoptions={}, vfmt=nil, afmt=nil}
+        return vres, {}, nil, nil, url
+    end
+
+    local vres, ares , vfmt, afmt = download_formats(url)
     return vres, ares , vfmt, afmt, url
 end
 
@@ -457,7 +473,7 @@ local function show_menu(isvideo)
         destroyer()
     end
 
-    local voptions, aoptions, vfmt, afmt, url = download_formats()
+    local voptions, aoptions, vfmt, afmt, url = get_formats()
 
     local options
     if isvideo then
@@ -616,9 +632,12 @@ mp.add_key_binding(nil, "reload", reload_resume)
 local original_format = mp.get_property("ytdl-format")
 local path = nil
 local function file_start()
-    local new_path = mp.get_property("path")
+    local new_path = get_url()
+    if not new_path then return end
+
+    local data = url_data[new_path]
+
     if opts.reset_format and path and new_path ~= path then
-        local data = url_data[new_path]
         if data then
             msg.verbose("setting previously set format")
             mp.set_property("ytdl-format", format_string(data.vfmt, data.afmt))
@@ -629,8 +648,8 @@ local function file_start()
     end
     if opts.start_with_menu and new_path ~= path then
         video_formats_toggle()
-    elseif opts.fetch_on_start then
-        download_formats()
+    elseif opts.fetch_on_start and not data then
+        download_formats(new_path)
     end
     path = new_path
 end
