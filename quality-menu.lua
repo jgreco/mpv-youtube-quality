@@ -490,13 +490,19 @@ local function show_menu(isvideo)
 
     local active = 0
     local selected = 1
+    local fmt = isvideo and vfmt or afmt
     --set the cursor to the current format
-    for i,v in ipairs(options) do
-        if v.format == (isvideo and vfmt or afmt) then
-            active = i
-            selected = active
-            break
+    if fmt then
+        for i,v in ipairs(options) do
+            if v.format == fmt then
+                active = i
+                selected = active
+                break
+            end
         end
+    else
+        active = #options + 1
+        selected = active
     end
 
     local function table_size(t)
@@ -526,6 +532,7 @@ local function show_menu(isvideo)
             for i,v in ipairs(options) do
                 ass:append(choose_prefix(i)..v.label.."\\N")
             end
+            ass:append(choose_prefix(#options+1).."None")
         else
             ass:append("no formats found")
         end
@@ -535,7 +542,7 @@ local function show_menu(isvideo)
         mp.set_osd_ass(w, h, ass.text)
     end
 
-    local num_options = table_size(options)
+    local num_options = table_size(options) + 1
     local timeout = nil
 
     local function selected_move(amt)
@@ -599,11 +606,12 @@ local function show_menu(isvideo)
             destroy()
             if selected == active then return end
 
+            fmt = options[selected] and options[selected].format or nil
             if isvideo == true then
-                vfmt = options[selected].format
+                vfmt = fmt
                 url_data[url].vfmt = vfmt
             else
-                afmt = options[selected].format
+                afmt = fmt
                 url_data[url].afmt = afmt
             end
             mp.set_property("ytdl-raw-options", "")    --reset youtube-dl raw options before changing format
