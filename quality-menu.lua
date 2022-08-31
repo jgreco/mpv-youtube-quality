@@ -505,6 +505,7 @@ local function set_format(url, vfmt, afmt)
     end
 end
 
+local uosc = false
 local destroyer = nil
 local function show_menu(isvideo)
 
@@ -544,6 +545,37 @@ local function show_menu(isvideo)
     else
         active = #options + 1
         selected = active
+    end
+
+    if uosc then
+        local menu = {
+            title =  isvideo and 'Video Formats' or 'Audio Formats',
+            items = {},
+            active_index = active,
+            type = (isvideo and 'video' or 'audio') .. '_formats',
+        }
+        for i, option in ipairs(options) do
+            menu.items[i] = {
+                title = option.label,
+                value = {
+                    'script-message-to',
+                    'quality_menu',
+                    (isvideo and 'video' or 'audio') .. '_format_set',
+                    url,
+                    option.format}
+            }
+        end
+        menu.items[#menu.items + 1] = {
+            title = 'None',
+            value = {
+                'script-message-to',
+                'quality_menu',
+                (isvideo and 'video' or 'audio') .. '_format_set',
+                url}
+        }
+        local json = utils.format_json(menu)
+        mp.commandv('script-message-to', 'uosc', 'show-menu', json)
+        return
     end
 
     local function table_size(t)
@@ -749,3 +781,9 @@ end)
 mp.register_script_message('register-ui', function(script_name)
     ui_callback[#ui_callback + 1] = script_name
 end)
+
+-- check if uosc is running
+mp.register_script_message('uosc-version', function(version)
+	uosc = true
+end)
+mp.commandv('script-message-to', 'uosc', 'get-version', mp.get_script_name())

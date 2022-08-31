@@ -84,7 +84,7 @@ The following script messages are send out on request or after registering:
 - [x] Option to populate the quality list automatically with the exact formats available for a given video.
 - [x] Optional OSC extension.
 - [x] Get formats from when mpv calls yt-dlp/youtube-dl to get the video, instead of calling yt-dlp/youtube-dl  again. (implemented on get_json_from_ytdl_hook branch, requires PR for mpv to be merged)
-- [ ] Integration into [uosc](https://github.com/darsain/uosc/) (PoC exists on the [script_interface](https://github.com/christoph-heinrich/mpv-quality-menu/tree/script_interface) branch and a [WIP PR for uosc](https://github.com/darsain/uosc/pull/102))
+- [x] Integration into [uosc](https://github.com/tomasklaen/uosc)
 - [ ] Detect when there is no video output and then deactivate video menu and formats.
 - [ ] Scrolling for long menus
 - [ ] Keep data buffer of unchanged format (e.g. after selecting a new audio format, having to reload the already buffered video data is wasteful).
