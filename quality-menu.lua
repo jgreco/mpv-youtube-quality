@@ -526,6 +526,14 @@ local function show_menu(isvideo)
     end
 
     if options == nil then
+        if uosc then
+            if isvideo then
+                mp.commandv('script-binding', 'uosc/video')
+            else
+                mp.commandv('script-binding', 'uosc/audio')
+            end
+        end
+
         return
     end
 
