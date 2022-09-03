@@ -18,6 +18,8 @@ Simply open the video or audio menu, select your prefered format and confirm you
 - Remembers selected format for every url in the current session (e.g. going back to previous playlist item automatically selects the prefered format)
 - Controllable entirely by mouse and keyboard (opening and closing the menu by mouse requires the OSC extension)
 - Simple reload functionality (for something more sophisticated, go to [reload.lua](https://github.com/4e6/mpv-reload/))
+- Integration into [uosc](https://github.com/tomasklaen/uosc) for opening a graphical menu instead of the purely text based one.  
+    Note: This requires uosc 3.2.0 or newer, which has not been released yet.
 
 ## OSC extension
 **(optional)** An extended version of the OSC is available that includes a button to display the quality menu.
@@ -83,17 +85,8 @@ The following script messages are send out on request or after registering:
 - [x] Visual indication of what the current quality level is.
 - [x] Option to populate the quality list automatically with the exact formats available for a given video.
 - [x] Optional OSC extension.
-- [x] Get formats from when mpv calls yt-dlp/youtube-dl to get the video, instead of calling yt-dlp/youtube-dl  again. (implemented on get_json_from_ytdl_hook branch, requires PR for mpv to be merged)
 - [x] Integration into [uosc](https://github.com/tomasklaen/uosc)
-- [ ] Detect when there is no video output and then deactivate video menu and formats.
-- [ ] Scrolling for long menus
-- [ ] Keep data buffer of unchanged format (e.g. after selecting a new audio format, having to reload the already buffered video data is wasteful).
 - [ ] *\[your suggestion here\]*
-
-## Ask for help
-I have no idea how to go about switching out the format for one stream, while retaining the other.
-Any help would be highly appreciated.
-
 
 ## Credit
 - [reload.lua](https://github.com/4e6/mpv-reload/), for the function to reload a video while preserving the playlist.
