@@ -568,7 +568,7 @@ local function show_menu(isvideo)
                 value = {
                     'script-message-to',
                     'quality_menu',
-                    (isvideo and 'video' or 'audio') .. '_format_set',
+                    (isvideo and 'video' or 'audio') .. '-format-set',
                     url,
                     option.format}
             }
@@ -578,7 +578,7 @@ local function show_menu(isvideo)
             value = {
                 'script-message-to',
                 'quality_menu',
-                (isvideo and 'video' or 'audio') .. '_format_set',
+                (isvideo and 'video' or 'audio') .. '-format-set',
                 url}
         }
         local json = utils.format_json(menu)
