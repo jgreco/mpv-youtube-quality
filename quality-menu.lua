@@ -586,14 +586,6 @@ local function show_menu(isvideo)
         return
     end
 
-    local function table_size(t)
-        local s = 0
-        for i,v in ipairs(t) do
-            s = s+1
-        end
-        return s
-    end
-
     local function choose_prefix(i)
         if     i == selected and i == active then return opts.selected_and_active
         elseif i == selected then return opts.selected_and_inactive end
@@ -609,7 +601,7 @@ local function show_menu(isvideo)
         ass:pos(opts.text_padding_x, opts.text_padding_y)
         ass:append(opts.style_ass_tags)
 
-        if options[1] then
+        if #options > 0 then
             for i,v in ipairs(options) do
                 ass:append(choose_prefix(i)..v.label.."\\N")
             end
@@ -623,7 +615,7 @@ local function show_menu(isvideo)
         mp.set_osd_ass(w, h, ass.text)
     end
 
-    local num_options = table_size(options) + 1
+    local num_options = #options + 1
     local timeout = nil
 
     local function selected_move(amt)
@@ -682,7 +674,7 @@ local function show_menu(isvideo)
 
     bind_keys(opts.up_binding,     "move_up",   function() selected_move(-1) end, {repeatable=true})
     bind_keys(opts.down_binding,   "move_down", function() selected_move(1)  end, {repeatable=true})
-    if options[1] then
+    if #options > 0 then
         bind_keys(opts.select_binding, "select", function()
             destroy()
             if selected == active then return end
