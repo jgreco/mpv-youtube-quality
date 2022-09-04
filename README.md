@@ -69,10 +69,19 @@ The following script messages are send out on request or after registering:
 
 - `video-formats` `(url, formats, format_id)`  
     Sends the available `formats` and current `format_id` for url to the script that requested it via `video-formats-get`.  
-    `formats` is a JSON with that contains an array of formats.  
-    Each format has a `label` and a `format` field.  
+    `formats` is a JSON array that contains all available video formats.  
+    ```
+    formats = Format[]
+    
+    Format {
+        label: string
+        format: string
+    }
+    ```
     - `label` is the line that quality-menu would display for that format.
     - `format` is the format id for that format.
+    
+    The JSON array can be converted into a Lua table using `formats = utils.parse_json(formats)`
 - `audio-formats` `(url, formats, format_id)`  
     Analogous to `video-formats`.
 - `video-formats-menu` `()`  
