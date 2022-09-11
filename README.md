@@ -26,21 +26,29 @@ Simply open the video or audio menu, select your prefered format and confirm you
 
 ![screenshot](quality-menu-preview-osc.jpg)
 
-**PLEASE NOTE:** This conflicts with other scripts that modify the OSC, such as marzzzello's fork of the excellent [mpv_thumbnail_script](https://github.com/marzzzello/mpv_thumbnail_script).  Merging this OSC modification with that script or others is certainly possible, *but is left as an exercise for the user...* (hint: There are two sections markt with `START quality-menu` and `END quality-menu`)
+**PLEASE NOTE:** This conflicts with other scripts that modify the OSC, such as marzzzello's fork of the excellent [mpv_thumbnail_script](https://github.com/marzzzello/mpv_thumbnail_script). Merging this OSC modification with that script or others is certainly possible, *but is left as an exercise for the user...* (hint: There are two sections marked with `START quality-menu` and `END quality-menu`)
 
 
 ## Installation
 1. Save the `quality-menu.lua` into your [scripts directory](https://mpv.io/manual/stable/#script-location)
-2. Set key bindings in [`input.conf`](https://mpv.io/manual/stable/#input-conf):
-
-    `Ctrl+f script-binding quality_menu/video_formats_toggle`
-
-    `Alt+f script-binding quality_menu/audio_formats_toggle`
-
+2. Set key bindings in [`input.conf`](https://mpv.io/manual/stable/#input-conf)
+    ```
+    Ctrl+f script-binding quality_menu/video_formats_toggle
+    Alt+f  script-binding quality_menu/audio_formats_toggle
+    ```
     **(optional)** `Ctrl+r script-binding quality_menu/reload`
 
 3. **(optional)** Save the `quality-menu.conf` into your `script-opts` directory (next to the [scripts directory](https://mpv.io/manual/stable/#script-location), create if it doesn't exist)
-4. **(optional)** Save the `quality-menu-osc.lua` into your [scripts directory](https://mpv.io/manual/stable/#script-location)  and put `osc=no` in your [mpv.conf](https://mpv.io/manual/stable/#location-and-syntax)
+4. **(optional)** UI integration (pick one)
+   - For OSC: Save the `quality-menu-osc.lua` into your [scripts directory](https://mpv.io/manual/stable/#script-location)  and put `osc=no` in your [mpv.conf](https://mpv.io/manual/stable/#location-and-syntax)
+   - For [uosc](https://github.com/tomasklaen/uosc) (each is optional)
+     1. Add the video and audio menu to the uosc menu by appending `#! ...` to your key bindings in [`input.conf`](https://mpv.io/manual/stable/#input-conf)
+       ```
+       Ctrl+f script-binding quality_menu/video_formats_toggle #! Stream Quality > Video
+       Alt+f  script-binding quality_menu/audio_formats_toggle #! Stream Quality > Audio
+       ```
+     2. Replace the `<video>video` control in your [`uosc.conf`](https://github.com/tomasklaen/uosc/blob/main/script-opts/uosc.conf) with `<video>command:theaters:script-binding quality_menu/video_formats_toggle?Video`
+     3. Replace the `<has_audio,!audio>audio` control in your [`uosc.conf`](https://github.com/tomasklaen/uosc/blob/main/script-opts/uosc.conf) with `<has_audio>command:audiotrack:script-binding quality_menu/audio_formats_toggle?Audio`
 
 ## API
 This was originally made for the [uosc](https://github.com/tomasklaen/uosc) integration.
@@ -65,7 +73,7 @@ Receiving the following script messages is suppored, with the parameters in brac
     Whenever the menu would get toggled, it instead sends a script message to `script_name`.  
     For the video menu it sends the `video-formats-menu` message, and for audio it sends the `audio-formats-menu` message.
 
-The following script messages are send out on request or after registering:
+The following script messages are send out on request or after registering.
 
 - `video-formats` `(url, formats, format_id)`  
     Sends the available `formats` and current `format_id` for url to the script that requested it via `video-formats-get`.  
