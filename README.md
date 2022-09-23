@@ -9,25 +9,23 @@ Simply open the video or audio menu, select your prefered format and confirm you
 
 ## Features
 
-- Columns and their order are configurable
+- Currently playing format is marked and selected when opening the menu
+- Remembers selected format for every url in the current session (e.g. going back to previous playlist item automatically selects the prefered format)
+- Controllable entirely by mouse or keyboard (opening by mouse requires either the OSC extension, [uosc](https://github.com/tomasklaen/uosc) or an additional entry in [`input.conf`](https://mpv.io/manual/stable/#input-conf))
 - All format related information from yt-dlp/youtube-dl can be shown
 - Columns that are identical for all formats are automatically hidden
 - Formats can be sorted based on resolution, fps, bitrate, etc.
-- Currently playing format is marked and selected when opening the menu
-- Indentation makes it easy to see which line you're currently on
-- Remembers selected format for every url in the current session (e.g. going back to previous playlist item automatically selects the prefered format)
-- Controllable entirely by mouse and keyboard (opening and closing the menu by mouse requires the OSC extension)
-- Simple reload functionality (for something more sophisticated, go to [reload.lua](https://github.com/4e6/mpv-reload/))
-- Integration into [uosc](https://github.com/tomasklaen/uosc) for opening a graphical menu instead of the purely text based one.  
-    Note: This requires uosc 3.2.0 or newer, which has not been released yet.
+- Simple reload functionality
+- Columns and their order are configurable
+- **(optional)** Graphical menu via [uosc](https://github.com/tomasklaen/uosc) integration  
+    Note: Requires uosc 4.0.0 or newer.
 
 ## OSC extension
 **(optional)** An extended version of the OSC is available that includes a button to display the quality menu.
 
 ![screenshot](quality-menu-preview-osc.jpg)
 
-**PLEASE NOTE:** This conflicts with other scripts that modify the OSC, such as marzzzello's fork of the excellent [mpv_thumbnail_script](https://github.com/marzzzello/mpv_thumbnail_script). Merging this OSC modification with that script or others is certainly possible, *but is left as an exercise for the user...* (hint: There are two sections marked with `START quality-menu` and `END quality-menu`)
-
+**PLEASE NOTE:** This conflicts with other scripts that modify the OSC. Merging this OSC modification others is certainly possible. Depending on how the osc is modified, the [osc.patch](osc.patch) might apply cleanly, but you have to make sure the filename in the patch lines up with the filename of your files.
 
 ## Installation
 1. Save the `quality-menu.lua` into your [scripts directory](https://mpv.io/manual/stable/#script-location)
@@ -40,15 +38,16 @@ Simply open the video or audio menu, select your prefered format and confirm you
 
 3. **(optional)** Save the `quality-menu.conf` into your `script-opts` directory (next to the [scripts directory](https://mpv.io/manual/stable/#script-location), create if it doesn't exist)
 4. **(optional)** UI integration (pick one)
-   - For OSC: Save the `quality-menu-osc.lua` into your [scripts directory](https://mpv.io/manual/stable/#script-location)  and put `osc=no` in your [mpv.conf](https://mpv.io/manual/stable/#location-and-syntax)
-   - For [uosc](https://github.com/tomasklaen/uosc) (each is optional)
-     1. Add the video and audio menu to the uosc menu by appending `#! ...` to your key bindings in [`input.conf`](https://mpv.io/manual/stable/#input-conf)
-       ```
-       Ctrl+f script-binding quality_menu/video_formats_toggle #! Stream Quality > Video
-       Alt+f  script-binding quality_menu/audio_formats_toggle #! Stream Quality > Audio
-       ```
-     2. Replace the `<video>video` control in your [`uosc.conf`](https://github.com/tomasklaen/uosc/blob/main/script-opts/uosc.conf) with `<video>command:theaters:script-binding quality_menu/video_formats_toggle?Video`
-     3. Replace the `<has_audio,!audio>audio` control in your [`uosc.conf`](https://github.com/tomasklaen/uosc/blob/main/script-opts/uosc.conf) with `<has_audio>command:audiotrack:script-binding quality_menu/audio_formats_toggle?Audio`
+    - For OSC: Save the `quality-menu-osc.lua` into your [scripts directory](https://mpv.io/manual/stable/#script-location)  and put `osc=no` in your [mpv.conf](https://mpv.io/manual/stable/#location-and-syntax)
+    - For [uosc](https://github.com/tomasklaen/uosc) (each is optional)
+        1. Add the video and audio menu to the uosc menu by appending `#! ...` to your key bindings in [`input.conf`](https://mpv.io/manual/stable/#input-conf)
+        ```
+        Ctrl+f script-binding quality_menu/video_formats_toggle #! Stream Quality > Video
+        Alt+f  script-binding quality_menu/audio_formats_toggle #! Stream Quality > Audio
+        ```
+        2. Add buttons to the `contols=` option in your [`uosc.conf`](https://github.com/tomasklaen/uosc/blob/main/script-opts/uosc.conf)
+            1. `<video>command:theaters:script-binding quality_menu/video_formats_toggle?Video` for opening the video menu
+            2. `<has_audio>command:audiotrack:script-binding quality_menu/audio_formats_toggle?Audio` for opening the audio menu
 
 ## API
 This was originally made for the [uosc](https://github.com/tomasklaen/uosc) integration.
@@ -99,10 +98,10 @@ The following script messages are send out on request or after registering.
 
 
 ## Plans For Future Enhancement
-- [x] Visual indication of what the current quality level is.
-- [x] Option to populate the quality list automatically with the exact formats available for a given video.
-- [x] Optional OSC extension.
-- [x] Integration into [uosc](https://github.com/tomasklaen/uosc)
+- [x] Visual indication of what the current quality level is
+- [x] Option to populate the quality list automatically with the exact formats available for a given video
+- [x] Optional OSC extension
+- [x] [uosc](https://github.com/tomasklaen/uosc) integration
 - [ ] *\[your suggestion here\]*
 
 ## Credit
