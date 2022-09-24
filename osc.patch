@@ -1,0 +1,36 @@
+diff --git a/osc.lua b/osc.lua
+index fba6e88..0a2f6c2 100644
+--- a/osc.lua
++++ b/osc.lua
+@@ -1615,6 +1615,13 @@ function bar_layout(direction)
+     lo.geometry = geo
+     lo.style = osc_styles.smallButtonsBar
+ 
++    -- START quality-menu
++    geo = { x = geo.x - geo.w - padX, y = geo.y, an = geo.an, w = geo.w, h = geo.h }
++    lo = add_layout("quality-menu")
++    lo.geometry = geo
++    lo.style = osc_styles.smallButtonsBar
++    -- END quality-menu
++
+     -- Volume
+     geo = { x = geo.x - geo.w - padX, y = geo.y, an = geo.an, w = geo.w, h = geo.h }
+     lo = add_layout("volume")
+@@ -2110,6 +2117,17 @@ function osc_init()
+             string.format("%3.0fs", sec))
+     end
+ 
++    -- START quality-menu
++    ne = new_element("quality-menu", "button")
++    ne.content = function()
++        return ("≚")
++    end
++    ne.eventresponder["mbtn_left_up"] =
++        function () mp.commandv("script-message", "video_formats_toggle") end
++    ne.eventresponder["mbtn_right_up"] =
++        function () mp.commandv("script-message", "audio_formats_toggle") end
++    -- END quality-menu
++
+     -- volume
+     ne = new_element("volume", "button")
+ 
