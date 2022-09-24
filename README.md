@@ -3,9 +3,7 @@ A userscript for MPV that allows you to change the streamed video and audio qual
 
 Simply open the video or audio menu, select your prefered format and confirm your choice. The keybindings for opening the menus are configured in input.conf, and everthing else is configured in quality-menu.conf.
 
-![screenshot](quality-menu-preview-video.jpg)
-
-![screenshot](quality-menu-preview-audio.jpg)
+![screenshot](preview.jpg)
 
 ## Features
 
