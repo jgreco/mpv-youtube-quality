@@ -785,6 +785,8 @@ end)
 
 -- check if uosc is running
 mp.register_script_message('uosc-version', function(version)
-	uosc = true
+    version = tonumber((version:gsub('%.', '')))
+---@diagnostic disable-next-line: cast-local-type
+    uosc = version and version >= 400
 end)
 mp.commandv('script-message-to', 'uosc', 'get-version', mp.get_script_name())
