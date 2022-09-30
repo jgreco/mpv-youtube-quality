@@ -44,8 +44,8 @@ Simply open the video or audio menu, select your prefered format and confirm you
         Alt+f  script-binding quality_menu/audio_formats_toggle #! Stream Quality > Audio
         ```
         2. Add buttons to the `contols=` option in your [`uosc.conf`](https://github.com/tomasklaen/uosc/blob/main/script-opts/uosc.conf)
-            1. `<video>command:theaters:script-binding quality_menu/video_formats_toggle?Video` for opening the video menu
-            2. `<has_audio>command:audiotrack:script-binding quality_menu/audio_formats_toggle?Audio` for opening the audio menu
+            1. `<!has_many_video,video,stream>command:theaters:script-binding quality_menu/video_formats_toggle#@vformats>1?Video`
+            2. `<!has_many_audio,has_audio,stream>command:graphic_eq:script-binding quality_menu/audio_formats_toggle#@aformats>1?Audio`
 
 ## API
 This was originally made for the [uosc](https://github.com/tomasklaen/uosc) integration.
