@@ -441,7 +441,7 @@ local function get_url()
 end
 
 local function send_formats_to(type, url, script_name, options, format_id)
-    mp.commandv('script-message-to', script_name, type .. '_formats', url, utils.format_json(options), format_id)
+    mp.commandv('script-message-to', script_name, type .. '_formats', url, utils.format_json(options or {}), format_id or '')
 end
 
 local queue_callback_video = {}
