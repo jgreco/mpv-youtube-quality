@@ -31,7 +31,7 @@ local opts = {
     unselected_and_inactive = "○ - ",
 
     --font size scales by window, if false requires larger font and padding sizes
-    scale_playlist_by_window = true,
+    scale_playlist_by_window = false,
 
     --playlist ass style overrides inside curly brackets, \keyvalue is one field, extra \ for escape in lua
     --example {\\fnUbuntu\\fs10\\b0\\bord1} equals: font=Ubuntu, size=10, bold=no, border=1
@@ -40,11 +40,15 @@ local opts = {
     --these styles will be used for the whole playlist. More specific styling will need to be hacked in
     --
     --(a monospaced font is recommended but not required)
-    style_ass_tags = "{\\fnmonospace\\fs10\\bord1}",
+    style_ass_tags = "{\\fnmonospace\\fs20\\bord1}",
 
-    --paddings for top left corner
+    -- Shift drawing coordinates. Required for mpv.net compatiblity
+    shift_x = 0,
+    shift_y = 0,
+
+    --paddings from window edge
     text_padding_x = 5,
-    text_padding_y = 5,
+    text_padding_y = 10,
 
     --how many seconds until the quality menu times out
     --setting this to 0 deactivates the timeout
@@ -120,6 +124,8 @@ local opts = {
 }
 opt.read_options(opts, "quality-menu")
 opts.quality_strings = utils.parse_json(opts.quality_strings)
+
+opts.font_size = tonumber(opts.style_ass_tags:match('\\fs(%d+%.?%d*)')) or 20
 
 -- special thanks to reload.lua (https://github.com/4e6/mpv-reload/)
 local function reload_resume()
@@ -660,11 +666,38 @@ local function show_menu(isvideo)
         return "> " --shouldn't get here.
     end
 
+    local scrolled_lines = nil
+    local width, height
+    local num_options = #options + 1
+
+    local function update_scroll_position()
+        local screen_lines = math.max(math.floor((height - opts.text_padding_y * 2) / opts.font_size), 1)
+        local max_scroll = math.max(num_options - screen_lines, 0)
+        local function scrolled_lines_calc(screen_target)
+            return math.min(math.max(selected - math.ceil(screen_lines * screen_target), 0), max_scroll)
+        end
+
+        if not scrolled_lines then
+            scrolled_lines = scrolled_lines_calc(0.5)
+        else
+            local top_screen_line = scrolled_lines + 1
+            local bottom_screen_line = top_screen_line + screen_lines - 1
+            if (selected - top_screen_line) / screen_lines < 1 / 3 then
+                scrolled_lines = scrolled_lines_calc(1 / 3)
+            elseif (bottom_screen_line - selected) / screen_lines < 1 / 3 then
+                scrolled_lines = scrolled_lines_calc(2 / 3)
+            end
+        end
+    end
+
     local function draw_menu()
         local ass = assdraw.ass_new()
 
-        ass:pos(opts.text_padding_x, opts.text_padding_y)
-        ass:append(opts.style_ass_tags)
+        update_scroll_position()
+
+        local pos_y = opts.shift_y + opts.text_padding_y - scrolled_lines * opts.font_size
+        ass:pos(opts.shift_x + opts.text_padding_x, pos_y)
+        ass:append(opts.style_ass_tags .. '{\\q2}')
 
         if #options > 0 then
             for i, v in ipairs(options) do
@@ -675,12 +708,21 @@ local function show_menu(isvideo)
             ass:append("no formats found")
         end
 
-        local w, h = mp.get_osd_size()
-        if opts.scale_playlist_by_window then w, h = 0, 0 end
-        mp.set_osd_ass(w, h, ass.text)
+        mp.set_osd_ass(width, height, ass.text)
     end
 
-    local num_options = #options + 1
+    local function update_dimensions()
+        local _, h, aspect = mp.get_osd_size()
+        if opts.scale_playlist_by_window then h = 720 end
+        height = h
+        width = h * aspect
+        draw_menu()
+    end
+
+    update_dimensions()
+    mp.observe_property('osd-dimensions', 'native', update_dimensions)
+    update_scroll_position()
+
     local timeout = nil
 
     local function selected_move(amt)
@@ -729,6 +771,7 @@ local function show_menu(isvideo)
         unbind_keys(opts.down_binding, "move_down")
         unbind_keys(opts.select_binding, "select")
         unbind_keys(opts.close_menu_binding, "close")
+        mp.unobserve_property(update_dimensions)
         destroyer = nil
     end
 
