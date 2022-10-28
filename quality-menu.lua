@@ -382,6 +382,7 @@ local function process_json_string(url, json)
 
     if (json == nil) then
         mp.osd_message("fetching formats failed...", 2)
+        if err == nil then err = "unexpected error occurred" end
         msg.error("failed to parse JSON data: " .. err)
         return
     end
@@ -413,8 +414,32 @@ local function download_formats(url)
     end
 
     local function exec(args)
-        local res, err = mp.command_native({name = "subprocess", args = args, capture_stdout = true, capture_stderr = true})
-        return res.status, res.stdout, res.stderr
+        msg.debug("Running: " .. table.concat(args, " "))
+        local ret = mp.command_native({name = "subprocess",
+                                       args = args,
+                                       capture_stdout = true,
+                                       capture_stderr = true})
+        return ret.status, ret.stdout, ret, ret.killed_by_us
+    end
+
+    local function check_version(ytdl_path)
+        local command = {
+            name = "subprocess",
+            capture_stdout = true,
+            args = {ytdl_path, "--version"}
+        }
+        local version_string = mp.command_native(command).stdout
+        local year, month, day = string.match(version_string, "(%d+).(%d+).(%d+)")
+
+        -- sanity check
+        if (tonumber(year) < 2000) or (tonumber(month) > 12) or
+            (tonumber(day) > 31) then
+            return
+        end
+        local version_ts = os.time{year=year, month=month, day=day}
+        if (os.difftime(os.time(), version_ts) > 60*60*24*90) then
+            msg.warn("It appears that your youtube-dl version is severely out of date.")
+        end
     end
 
     local ytdl_format = mp.get_property("ytdl-format")
@@ -427,12 +452,38 @@ local function download_formats(url)
 
     msg.verbose("calling youtube-dl with command: " .. table.concat(command, " "))
 
-    local es, stdout, stderr = exec(command)
+    local es, json, result, aborted = exec(command)
 
-    if (es < 0) or (stdout == nil) or (stdout == "") then
+    if aborted then
+        return
+    end
+
+    if (es ~= 0) or (json == "") then
+        json = nil
+    end
+
+    if (json == nil) then
         mp.osd_message("fetching formats failed...", 2)
-        msg.error("failed to get format list: " .. es)
-        msg.error("stderr: " .. stderr)
+        msg.verbose("status:", es)
+        msg.verbose("reason:", result.error_string)
+        msg.verbose("stdout:", result.stdout)
+        msg.verbose("stderr:", result.stderr)
+
+        -- trim our stderr to avoid spurious newlines
+        ytdl_err = result.stderr:gsub("^%s*(.-)%s*$", "%1")
+        msg.error(ytdl_err)
+        local err = "youtube-dl failed: "
+        if result.error_string and result.error_string == "init" then
+            err = err .. "not found or not enough permissions"
+        elseif not result.killed_by_us then
+            err = err .. "unexpected error occurred"
+        else
+            err = string.format("%s returned '%d'", err, es)
+        end
+        msg.error(err)
+        if string.find(ytdl_err, "yt%-dl%.org/bug") then
+            check_version(ytdl.path)
+        end
         return
     end
 
