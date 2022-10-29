@@ -670,10 +670,12 @@ local function show_menu(isvideo)
     end
 
     local width, height
+    local margin_top, margin_bottom = 0, 0
     local num_options = #options + 1
 
     local function get_scrolled_lines()
-        local screen_lines = math.max(math.floor((height - opts.text_padding_y * 2) / opts.font_size), 1)
+        local output_height = height - opts.text_padding_y * 2 - margin_top * height - margin_bottom * height
+        local screen_lines = math.max(math.floor(output_height / opts.font_size), 1)
         local max_scroll = math.max(num_options - screen_lines, 0)
         return math.min(math.max(selected - math.ceil(screen_lines / 2), 0), max_scroll)
     end
@@ -689,9 +691,12 @@ local function show_menu(isvideo)
 
         ass:new_event()
         local scrolled_lines = get_scrolled_lines()
-        local pos_y = opts.shift_y + opts.text_padding_y - scrolled_lines * opts.font_size
+        local pos_y = opts.shift_y + margin_top * height + opts.text_padding_y - scrolled_lines * opts.font_size
         ass:pos(opts.shift_x + opts.text_padding_x, pos_y)
-        ass:append(opts.style_ass_tags .. '{\\q2}')
+        local clip_top = math.floor(margin_top * height + 0.5)
+        local clip_bottom = math.floor((1 - margin_bottom) * height + 0.5)
+        local clipping_coordinates = '0,' .. clip_top .. ',' .. width .. ',' .. clip_bottom
+        ass:append(opts.style_ass_tags .. '{\\q2\\clip(' .. clipping_coordinates .. ')}')
 
         if #options > 0 then
             for i, v in ipairs(options) do
@@ -713,8 +718,29 @@ local function show_menu(isvideo)
         draw_menu()
     end
 
+    local function update_margins()
+        local shared_props = mp.get_property_native('shared-script-properties')
+        local val = shared_props['osc-margins']
+        if val then
+            -- formatted as "%f,%f,%f,%f" with left, right, top, bottom, each
+            -- value being the border size as ratio of the window size (0.0-1.0)
+            local vals = {}
+            for v in string.gmatch(val, "[^,]+") do
+                vals[#vals + 1] = tonumber(v)
+            end
+            margin_top = vals[3] -- top
+            margin_bottom = vals[4] -- bottom
+        else
+            margin_top = 0
+            margin_bottom = 0
+        end
+        draw_menu()
+    end
+
     update_dimensions()
+    update_margins()
     mp.observe_property('osd-dimensions', 'native', update_dimensions)
+    mp.observe_property('shared-script-properties', 'native', update_margins)
 
     local timeout = nil
 
@@ -765,6 +791,7 @@ local function show_menu(isvideo)
         unbind_keys(opts.select_binding, "select")
         unbind_keys(opts.close_menu_binding, "close")
         mp.unobserve_property(update_dimensions)
+        mp.unobserve_property(update_margins)
         destroyer = nil
     end
 
