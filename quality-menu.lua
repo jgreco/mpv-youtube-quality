@@ -375,6 +375,7 @@ end
 
 local function get_url()
     local path = mp.get_property("path")
+    if not path then return nil end
     path = string.gsub(path, "ytdl://", "") -- Strip possible ytdl:// prefix.
 
     local function is_url(s)
