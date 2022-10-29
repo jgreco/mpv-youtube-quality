@@ -487,7 +487,7 @@ local function download_formats(url)
         msg.verbose("stderr:", result.stderr)
 
         -- trim our stderr to avoid spurious newlines
-        ytdl_err = result.stderr:gsub("^%s*(.-)%s*$", "%1")
+        local ytdl_err = result.stderr:gsub("^%s*(.-)%s*$", "%1")
         msg.error(ytdl_err)
         local err = "youtube-dl failed: "
         if result.error_string and result.error_string == "init" then
