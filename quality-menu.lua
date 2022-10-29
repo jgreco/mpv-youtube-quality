@@ -50,6 +50,9 @@ local opts = {
     text_padding_x = 5,
     text_padding_y = 10,
 
+    --Screen dim when menu is open
+    curtain_opacity = 0.7,
+
     --how many seconds until the quality menu times out
     --setting this to 0 deactivates the timeout
     menu_timeout = 6,
@@ -693,8 +696,15 @@ local function show_menu(isvideo)
     local function draw_menu()
         local ass = assdraw.ass_new()
 
+        local alpha = 255 - math.ceil(255 * opts.curtain_opacity)
+        ass.text = string.format('{\\pos(0,0)\\rDefault\\an7\\1c&H000000&\\alpha&H%X&}', alpha)
+        ass:draw_start()
+        ass:rect_cw(0, 0, width, height)
+        ass:draw_stop()
+
         update_scroll_position()
 
+        ass:new_event()
         local pos_y = opts.shift_y + opts.text_padding_y - scrolled_lines * opts.font_size
         ass:pos(opts.shift_x + opts.text_padding_x, pos_y)
         ass:append(opts.style_ass_tags .. '{\\q2}')
