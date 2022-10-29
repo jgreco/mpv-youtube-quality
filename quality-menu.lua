@@ -669,28 +669,13 @@ local function show_menu(isvideo)
         return "> " --shouldn't get here.
     end
 
-    local scrolled_lines = nil
     local width, height
     local num_options = #options + 1
 
-    local function update_scroll_position()
+    local function get_scrolled_lines()
         local screen_lines = math.max(math.floor((height - opts.text_padding_y * 2) / opts.font_size), 1)
         local max_scroll = math.max(num_options - screen_lines, 0)
-        local function scrolled_lines_calc(screen_target)
-            return math.min(math.max(selected - math.ceil(screen_lines * screen_target), 0), max_scroll)
-        end
-
-        if not scrolled_lines then
-            scrolled_lines = scrolled_lines_calc(0.5)
-        else
-            local top_screen_line = scrolled_lines + 1
-            local bottom_screen_line = top_screen_line + screen_lines - 1
-            if (selected - top_screen_line) / screen_lines < 1 / 3 then
-                scrolled_lines = scrolled_lines_calc(1 / 3)
-            elseif (bottom_screen_line - selected) / screen_lines < 1 / 3 then
-                scrolled_lines = scrolled_lines_calc(2 / 3)
-            end
-        end
+        return math.min(math.max(selected - math.ceil(screen_lines / 2), 0), max_scroll)
     end
 
     local function draw_menu()
@@ -702,9 +687,8 @@ local function show_menu(isvideo)
         ass:rect_cw(0, 0, width, height)
         ass:draw_stop()
 
-        update_scroll_position()
-
         ass:new_event()
+        local scrolled_lines = get_scrolled_lines()
         local pos_y = opts.shift_y + opts.text_padding_y - scrolled_lines * opts.font_size
         ass:pos(opts.shift_x + opts.text_padding_x, pos_y)
         ass:append(opts.style_ass_tags .. '{\\q2}')
@@ -731,7 +715,6 @@ local function show_menu(isvideo)
 
     update_dimensions()
     mp.observe_property('osd-dimensions', 'native', update_dimensions)
-    update_scroll_position()
 
     local timeout = nil
 
