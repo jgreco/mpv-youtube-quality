@@ -128,7 +128,7 @@ local opts = {
 opt.read_options(opts, "quality-menu")
 opts.quality_strings = utils.parse_json(opts.quality_strings)
 
-opts.font_size = tonumber(opts.style_ass_tags:match('\\fs(%d+%.?%d*)')) or 20
+opts.font_size = tonumber(opts.style_ass_tags:match('\\fs(%d+%.?%d*)')) or mp.get_property_number('osd-font-size') or 25
 
 -- special thanks to reload.lua (https://github.com/4e6/mpv-reload/)
 local function reload_resume()
