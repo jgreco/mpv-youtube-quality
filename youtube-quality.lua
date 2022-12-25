@@ -69,6 +69,8 @@ local destroyer = nil
 
 
 function show_menu()
+    local lower_boundary = 1
+    local upper_boundary = 13
     local selected = 1
     local active = 0
     local current_ytdl_format = mp.get_property("ytdl-format")
@@ -107,6 +109,17 @@ function show_menu()
         selected = selected + amt
         if selected < 1 then selected = num_options
         elseif selected > num_options then selected = 1 end
+
+        if selected < lower_boundary then
+            upper_boundary = upper_boundary - lower_boundary + selected
+            lower_boundary = selected
+        end
+
+        if upper_boundary < selected then
+            lower_boundary = lower_boundary + selected - upper_boundary
+            upper_boundary = selected
+        end
+
         timeout:kill()
         timeout:resume()
         draw_menu()
@@ -127,7 +140,9 @@ function show_menu()
         ass:append(opts.style_ass_tags)
 
         for i,v in ipairs(options) do
-            ass:append(choose_prefix(i)..v.label.."\\N")
+            if lower_boundary <= i and i <= upper_boundary then
+                ass:append(choose_prefix(i)..v.label.."\\N")
+            end
         end
 
 		local w, h = mp.get_osd_size()
@@ -144,6 +159,29 @@ function show_menu()
         mp.remove_key_binding("escape")
         destroyer = nil
     end
+
+    function increase_boundaries()
+        upper_boundary = upper_boundary + 1
+
+        timeout:kill()
+        timeout:resume()
+        draw_menu()
+    end
+
+    function decrease_boundaries()
+        if upper_boundary ~= lower_boundary then
+            if upper_boundary == selected then
+                lower_boundary = lower_boundary + 1
+            else
+                upper_boundary = upper_boundary - 1
+            end
+        end
+
+        timeout:kill()
+        timeout:resume()
+        draw_menu()
+    end
+
     timeout = mp.add_periodic_timer(opts.menu_timeout, destroy)
     destroyer = destroy
 
@@ -155,6 +193,8 @@ function show_menu()
         reload_resume()
     end)
     mp.add_forced_key_binding(opts.toggle_menu_binding, "escape", destroy)
+    mp.add_forced_key_binding("ctrl+UP", "increase_boundaries", function() increase_boundaries() end, {repeatable=true})
+    mp.add_forced_key_binding("ctrl+DOWN", "decrease_boundaries", function() decrease_boundaries() end, {repeatable=true})
 
     draw_menu()
     return 
