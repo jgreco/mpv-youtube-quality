@@ -151,8 +151,10 @@ function show_menu()
     mp.add_forced_key_binding(opts.down_binding,   "move_down", function() selected_move(1)  end, {repeatable=true})
     mp.add_forced_key_binding(opts.select_binding, "select",    function()
         destroy()
-        mp.set_property("ytdl-format", options[selected].format)
-        reload_resume()
+	if not (mp.get_property("ytdl-format")==options[selected].format) then
+		mp.set_property("ytdl-format", options[selected].format)
+		reload_resume()
+	end
     end)
     mp.add_forced_key_binding(opts.toggle_menu_binding, "escape", destroy)
 
